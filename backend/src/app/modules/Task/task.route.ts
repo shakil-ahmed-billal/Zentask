@@ -1,5 +1,5 @@
+import { UserRole } from "@prisma/client";
 import express from "express";
-import { UserRole } from "../../../../generated/prisma";
 import authMiddleware from "../../middlewares/auth";
 import { TaskController } from "./task.controller";
 
@@ -13,8 +13,8 @@ router.get(
 router.get("/stats", TaskController.getTaskStats);
 router.get("/", TaskController.getAllTasks);
 router.get("/:id", TaskController.getSingleTask);
-router.post("/create-task", TaskController.createTask);
-router.patch("/:id", TaskController.updateTask);
-router.delete("/:id", TaskController.deleteTask);
+router.post("/create-task", authMiddleware(), TaskController.createTask);
+router.patch("/:id", authMiddleware(), TaskController.updateTask);
+router.delete("/:id", authMiddleware(), TaskController.deleteTask);
 
 export const TaskRoutes = router;

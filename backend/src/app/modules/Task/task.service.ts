@@ -1,15 +1,25 @@
 import { prisma } from "../../lib/prisma";
 
 const createTaskInDB = async (data: any) => {
-  // Map assignedToId → memberId for schema compatibility
-  const { assignedToId, ...rest } = data;
+  const { assignedToId, projectId, memberId, ...rest } = data;
   const taskData: any = { ...rest };
-  if (assignedToId) taskData.memberId = assignedToId;
+
+  if (projectId) {
+    taskData.project = { connect: { id: projectId } };
+  }
+
+  const targetMemberId = assignedToId || data.memberId;
+  if (!targetMemberId) {
+    throw new Error("Target member is required for task creation");
+  }
+  taskData.member = { connect: { id: targetMemberId } };
+
+  if (taskData.deadline) taskData.deadline = new Date(taskData.deadline);
 
   return prisma.task.create({
     data: taskData,
     include: {
-      project: { select: { id: true, name: true } },
+      project: { select: { id: true, title: true } },
       member: { select: { id: true, name: true } },
     },
   });
@@ -50,7 +60,7 @@ const getAllTasksFromDB = async (filters: {
     where,
     orderBy: { createdAt: "desc" },
     include: {
-      project: { select: { id: true, name: true } },
+      project: { select: { id: true, title: true } },
       member: { select: { id: true, name: true } },
     },
   });
@@ -76,7 +86,7 @@ const getMyTasksFromDB = async (
     where,
     orderBy: { createdAt: "desc" },
     include: {
-      project: { select: { id: true, name: true } },
+      project: { select: { id: true, title: true } },
     },
   });
 };

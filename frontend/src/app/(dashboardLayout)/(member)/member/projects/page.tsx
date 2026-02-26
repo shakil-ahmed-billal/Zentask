@@ -1,14 +1,13 @@
 "use client";
 
 import { api } from "@/lib/api";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 type Project = {
   id: string;
   title: string;
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-  budget: number;
-  amount: number;
+  status: "PENDING" | "IN_PROGRESS" | "DELIVERED" | "CANCELLED";
   deliveryValue: number;
   progress: number;
   deadline: string;
@@ -27,11 +26,11 @@ export default function MemberProjectsPage() {
   const [statusFilter, setStatusFilter] = useState("");
 
   const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
-    budget: "",
-    amount: "",
     deliveryValue: "",
     progress: "",
     startDate: "",
@@ -40,6 +39,7 @@ export default function MemberProjectsPage() {
     sheetURL: "",
     projectPhotoURL: "",
     websiteURL: "",
+    status: "PENDING",
   });
 
   const fetchProjects = useCallback(async () => {
@@ -63,18 +63,14 @@ export default function MemberProjectsPage() {
     try {
       await api.post("/projects/create-project", {
         ...form,
-        budget: parseFloat(form.budget) || 0,
-        amount: parseFloat(form.amount) || 0,
         deliveryValue: parseFloat(form.deliveryValue) || 0,
         progress: parseFloat(form.progress) || 0,
-        memberId: "", // Optional as per user requirement to store as string if needed
+        memberId: "", // Optional
       });
       setShowCreate(false);
       setForm({
         title: "",
         description: "",
-        budget: "",
-        amount: "",
         deliveryValue: "",
         progress: "",
         startDate: "",
@@ -83,6 +79,7 @@ export default function MemberProjectsPage() {
         sheetURL: "",
         projectPhotoURL: "",
         websiteURL: "",
+        status: "PENDING",
       });
       fetchProjects();
     } catch (err) {
@@ -100,9 +97,68 @@ export default function MemberProjectsPage() {
     }
   };
 
+  const handleEdit = (p: Project) => {
+    setEditingProject(p);
+    setForm({
+      title: p.title,
+      description: (p as any).description || "",
+      deliveryValue: String(p.deliveryValue || 0),
+      progress: String(p.progress || 0),
+      startDate: p.startDate ? p.startDate.split("T")[0] : "",
+      deadline: p.deadline ? p.deadline.split("T")[0] : "",
+      telegramURL: p.telegramURL || "",
+      sheetURL: p.sheetURL || "",
+      projectPhotoURL: p.projectPhotoURL || "",
+      websiteURL: p.websiteURL || "",
+      status: p.status,
+    });
+    setShowEdit(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProject) return;
+    try {
+      await api.patch(`/projects/${editingProject.id}`, {
+        ...form,
+        deliveryValue: parseFloat(form.deliveryValue) || 0,
+        progress: parseFloat(form.progress) || 0,
+      });
+      setShowEdit(false);
+      setEditingProject(null);
+      setForm({
+        title: "",
+        description: "",
+        deliveryValue: "",
+        progress: "",
+        startDate: "",
+        deadline: "",
+        telegramURL: "",
+        sheetURL: "",
+        projectPhotoURL: "",
+        websiteURL: "",
+        status: "PENDING",
+      });
+      fetchProjects();
+    } catch (err) {
+      console.error("Failed to update project", err);
+    }
+  };
+
+  const handleStatusUpdate = async (id: string, newStatus: string) => {
+    try {
+      await api.patch(`/projects/${id}`, { status: newStatus });
+      setProjects((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, status: newStatus as any } : p)),
+      );
+    } catch (err) {
+      console.error("Failed to update status", err);
+    }
+  };
+
   const total = projects.length;
   const inProgress = projects.filter((p) => p.status === "IN_PROGRESS").length;
-  const completed = projects.filter((p) => p.status === "COMPLETED").length;
+  const completed = projects.filter((p) => p.status === "DELIVERED").length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -125,7 +181,7 @@ export default function MemberProjectsPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         <SCard label="Total Projects" value={total} />
         <SCard label="In Progress" value={inProgress} color="text-blue-600" />
-        <SCard label="Completed" value={completed} color="text-emerald-600" />
+        <SCard label="Delivered" value={completed} color="text-emerald-600" />
       </div>
 
       {/* Filter */}
@@ -142,7 +198,7 @@ export default function MemberProjectsPage() {
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
             <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
+            <option value="DELIVERED">Delivered</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
@@ -185,19 +241,36 @@ export default function MemberProjectsPage() {
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusColor(p.status)}`}
+                    <select
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border-none cursor-pointer outline-none ${statusColor(p.status)}`}
+                      value={p.status}
+                      onChange={(e) => handleStatusUpdate(p.id, e.target.value)}
                     >
-                      {p.status.replace("_", " ")}
-                    </span>
+                      <option value="PENDING">Pending</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="DELIVERED">Delivered</option>
+                      <option value="CANCELLED">Cancelled</option>
+                    </select>
                     <h3 className="font-semibold mt-2">{p.title}</h3>
                     {p.leader && (
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Leader: {p.leader.name}
                       </p>
                     )}
+                    <Link
+                      href={`/member/projects/${p.id}`}
+                      className="text-[10px] text-primary hover:underline mt-1 block"
+                    >
+                      View Details →
+                    </Link>
                   </div>
                   <div className="flex gap-1">
+                    <button
+                      onClick={() => handleEdit(p)}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Edit
+                    </button>
                     <button
                       onClick={() => handleDelete(p.id)}
                       className="text-xs text-red-500 hover:underline"
@@ -208,15 +281,9 @@ export default function MemberProjectsPage() {
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>
-                    Budget:{" "}
+                    Delivery Value:{" "}
                     <strong className="text-foreground">
-                      ${p.budget?.toLocaleString() ?? 0}
-                    </strong>
-                  </span>
-                  <span>
-                    Amount:{" "}
-                    <strong className="text-foreground">
-                      ${p.amount?.toLocaleString() ?? 0}
+                      ${p.deliveryValue?.toLocaleString() ?? 0}
                     </strong>
                   </span>
                 </div>
@@ -341,30 +408,6 @@ export default function MemberProjectsPage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium">
-                    Project Amount ($)
-                  </label>
-                  <input
-                    type="number"
-                    className="h-9 rounded-md border bg-background px-3 text-sm"
-                    value={form.amount}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, amount: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium">Budget ($)</label>
-                  <input
-                    type="number"
-                    className="h-9 rounded-md border bg-background px-3 text-sm"
-                    value={form.budget}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, budget: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium">
                     Delivery Value ($)
                   </label>
                   <input
@@ -453,6 +496,146 @@ export default function MemberProjectsPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Modal */}
+      {showEdit && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-xl border p-6 w-full max-w-lg shadow-xl text-foreground">
+            <h2 className="text-lg font-semibold mb-4 text-foreground">
+              Edit Project
+            </h2>
+            <form
+              onSubmit={handleUpdate}
+              className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-2"
+            >
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium">Project Title *</label>
+                <input
+                  required
+                  className="h-9 rounded-md border bg-background px-3 text-sm"
+                  value={form.title}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, title: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium">Description</label>
+                <textarea
+                  className="rounded-md border bg-background px-3 py-2 text-sm h-20 resize-none"
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, description: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium">Progress (%)</label>
+                  <input
+                    type="number"
+                    max="100"
+                    min="0"
+                    className="h-9 rounded-md border bg-background px-3 text-sm"
+                    value={form.progress}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, progress: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium">
+                    Delivery Value ($)
+                  </label>
+                  <input
+                    type="number"
+                    className="h-9 rounded-md border bg-background px-3 text-sm"
+                    value={form.deliveryValue}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, deliveryValue: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1 col-span-2">
+                  <label className="text-sm font-medium">Telegram URL</label>
+                  <input
+                    className="h-9 rounded-md border bg-background px-3 text-sm"
+                    value={form.telegramURL}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, telegramURL: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1 col-span-2">
+                  <label className="text-sm font-medium">Sheet URL</label>
+                  <input
+                    className="h-9 rounded-md border bg-background px-3 text-sm"
+                    value={form.sheetURL}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, sheetURL: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1 col-span-2">
+                  <label className="text-sm font-medium">Website URL</label>
+                  <input
+                    className="h-9 rounded-md border bg-background px-3 text-sm"
+                    value={form.websiteURL}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, websiteURL: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium">Start Date</label>
+                  <input
+                    type="date"
+                    className="h-9 rounded-md border bg-background px-3 text-sm"
+                    value={form.startDate}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, startDate: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium">Deadline *</label>
+                  <input
+                    required
+                    type="date"
+                    className="h-9 rounded-md border bg-background px-3 text-sm"
+                    value={form.deadline}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, deadline: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEdit(false);
+                    setEditingProject(null);
+                  }}
+                  className="px-4 py-2 rounded-md border text-sm hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
+                >
+                  Update Project
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -478,7 +661,7 @@ function statusColor(s: string) {
   const m: Record<string, string> = {
     PENDING: "bg-yellow-100 text-yellow-700",
     IN_PROGRESS: "bg-blue-100 text-blue-700",
-    COMPLETED: "bg-emerald-100 text-emerald-700",
+    DELIVERED: "bg-emerald-100 text-emerald-700",
     CANCELLED: "bg-red-100 text-red-700",
   };
   return m[s] ?? "bg-gray-100 text-gray-700";

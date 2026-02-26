@@ -1,4 +1,4 @@
-import { User, UserRole, UserStatus } from "../../../../generated/prisma";
+import { User, UserRole, UserStatus } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 
 const getAllUsersFromDB = async (filters: {

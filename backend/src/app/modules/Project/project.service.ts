@@ -18,8 +18,6 @@ const getAllProjectsFromDB = async (filters: {
   toDate?: string;
   month?: string;
   year?: string;
-  minBudget?: string;
-  maxBudget?: string;
   sortBy?: string;
   sortOrder?: string;
 }) => {
@@ -32,8 +30,6 @@ const getAllProjectsFromDB = async (filters: {
     toDate,
     month,
     year,
-    minBudget,
-    maxBudget,
     sortBy = "createdAt",
     sortOrder = "desc",
   } = filters;
@@ -43,12 +39,6 @@ const getAllProjectsFromDB = async (filters: {
   if (leaderId) where.leaderId = leaderId;
   if (memberId) where.members = { some: { userId: memberId } };
   if (search) where.title = { contains: search, mode: "insensitive" };
-
-  if (minBudget || maxBudget) {
-    where.budget = {};
-    if (minBudget) where.budget.gte = parseFloat(minBudget);
-    if (maxBudget) where.budget.lte = parseFloat(maxBudget);
-  }
 
   const dateFilter: any = {};
   if (fromDate) dateFilter.gte = new Date(fromDate);
@@ -61,7 +51,7 @@ const getAllProjectsFromDB = async (filters: {
   }
   if (Object.keys(dateFilter).length) where.createdAt = dateFilter;
 
-  const validSortFields = ["createdAt", "budget", "deadline", "title"];
+  const validSortFields = ["createdAt", "deadline", "title"];
   const orderByField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
 
   return prisma.project.findMany({

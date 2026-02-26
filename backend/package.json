@@ -6,9 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec tsx src/server.ts",
-    "build": "prisma generate && tsup src/index.ts --format esm --platform node --target node20 --outDir api --external pg-native",
+    "build": "prisma generate && tsup src/index.ts --format esm --platform node --target node20 --outDir api --external pg-native --external @prisma/client",
     "postinstall": "prisma generate",
-    "start": "node dist/server.js",
+    "start": "node api/index.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -32,7 +32,7 @@
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "@prisma/client-runtime-utils": "^7.4.1",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
     "better-auth": "^1.4.19",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -45,7 +45,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -57,6 +57,7 @@
     "prettier": "^3.8.1",
     "prisma": "^7.4.1",
     "ts-node-dev": "^2.0.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }
 }

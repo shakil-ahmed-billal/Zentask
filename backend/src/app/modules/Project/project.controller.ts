@@ -41,7 +41,9 @@ const getMyProjects = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingleProject = catchAsync(async (req: Request, res: Response) => {
-  const result = await ProjectService.getSingleProjectFromDB(req.params.id);
+  const result = await ProjectService.getSingleProjectFromDB(
+    req.params.id as string,
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -51,10 +53,33 @@ const getSingleProject = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateProject = catchAsync(async (req: Request, res: Response) => {
-  const result = await ProjectService.updateProjectInDB(
-    req.params.id,
-    req.body,
-  );
+  const { id } = req.params;
+  const userId = req.user?.id;
+
+  // Check if user is leader or member of the project
+  const project = await ProjectService.getSingleProjectFromDB(id as string);
+  if (!project) {
+    return sendResponse(res, {
+      statusCode: httpStatus.NOT_FOUND,
+      success: false,
+      message: "Project not found",
+      data: null,
+    });
+  }
+
+  const isLeader = project.leaderId === userId;
+  const isMember = project.members.some((m: any) => m.userId === userId);
+
+  if (!isLeader && !isMember) {
+    return sendResponse(res, {
+      statusCode: httpStatus.FORBIDDEN,
+      success: false,
+      message: "You are not authorized to update this project",
+      data: null,
+    });
+  }
+
+  const result = await ProjectService.updateProjectInDB(id as string, req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -64,7 +89,7 @@ const updateProject = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteProject = catchAsync(async (req: Request, res: Response) => {
-  const result = await ProjectService.deleteProjectFromDB(req.params.id);
+  const result = await ProjectService.deleteProjectFromDB(req.params.id as string);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -76,8 +101,8 @@ const deleteProject = catchAsync(async (req: Request, res: Response) => {
 const assignMember = catchAsync(async (req: Request, res: Response) => {
   const { projectId, userId } = req.body;
   const result = await ProjectService.assignMemberToProjectInDB(
-    projectId,
-    userId,
+    projectId as string,
+    userId as string,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -90,8 +115,8 @@ const assignMember = catchAsync(async (req: Request, res: Response) => {
 const removeMember = catchAsync(async (req: Request, res: Response) => {
   const { projectId, userId } = req.body;
   const result = await ProjectService.removeMemberFromProjectInDB(
-    projectId,
-    userId,
+    projectId as string,
+    userId as string,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,

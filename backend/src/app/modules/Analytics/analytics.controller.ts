@@ -22,6 +22,7 @@ const getMemberDashboardStats = catchAsync(
   async (req: Request, res: Response) => {
     const result = await AnalyticsService.getMemberDashboardStats(
       req.user?.id as string,
+      req.query as any,
     );
     sendResponse(res, {
       statusCode: httpStatus.OK,

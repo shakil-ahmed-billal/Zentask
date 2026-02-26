@@ -10,16 +10,13 @@ type Summary = {
   cancelledProjects: number;
   inProgressProjects: number;
   totalDeliveryValue: number;
-  completedValue: number;
-  pendingValue: number;
-  cancelledValue: number;
+  deliveredValue: number;
 };
 
 type Project = {
   id: string;
-  name: string;
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-  budget: number;
+  title: string;
+  status: "PENDING" | "IN_PROGRESS" | "DELIVERED" | "CANCELLED";
   deliveryValue: number;
   deadline: string;
   members: { user: { id: string; name: string } }[];
@@ -167,7 +164,7 @@ export default function LeaderDashboardPage() {
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
             <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
+            <option value="DELIVERED">Delivered</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
@@ -197,26 +194,16 @@ export default function LeaderDashboardPage() {
       </div>
 
       {/* Financial Summary */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2">
         <FinCard
           label="Total Delivery Value"
           value={summary?.totalDeliveryValue ?? 0}
           color="text-foreground"
         />
         <FinCard
-          label="Completed Value"
-          value={summary?.completedValue ?? 0}
+          label="Delivered Value"
+          value={summary?.deliveredValue ?? 0}
           color="text-emerald-600"
-        />
-        <FinCard
-          label="Pending Value"
-          value={summary?.pendingValue ?? 0}
-          color="text-yellow-600"
-        />
-        <FinCard
-          label="Cancelled Value"
-          value={summary?.cancelledValue ?? 0}
-          color="text-red-500"
         />
       </div>
 
@@ -229,7 +216,7 @@ export default function LeaderDashboardPage() {
           color="text-blue-600"
         />
         <KpiCard
-          label="Completed"
+          label="Delivered"
           value={summary?.completedProjects ?? 0}
           color="text-emerald-600"
         />
@@ -260,7 +247,6 @@ export default function LeaderDashboardPage() {
                 <th className="px-4 py-3 text-left">Project Name</th>
                 <th className="px-4 py-3 text-left">Members</th>
                 <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-right">Budget</th>
                 <th className="px-4 py-3 text-center">Progress</th>
                 <th className="px-4 py-3 text-left">Deadline</th>
                 <th className="px-4 py-3 text-right">Delivery Value</th>
@@ -309,7 +295,7 @@ export default function LeaderDashboardPage() {
                       className={`hover:bg-muted/30 transition-colors ${isOverdue ? "bg-red-50/50" : ""}`}
                     >
                       <td className="px-4 py-3 font-medium">
-                        {p.name}
+                        {p.title}
                         {isOverdue && (
                           <span className="ml-2 text-[10px] bg-red-100 text-red-700 rounded-full px-2 py-0.5">
                             Overdue
@@ -336,9 +322,6 @@ export default function LeaderDashboardPage() {
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={p.status} />
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        ${p.budget?.toLocaleString() ?? "—"}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
@@ -432,7 +415,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     PENDING: "bg-yellow-100 text-yellow-700",
     IN_PROGRESS: "bg-blue-100 text-blue-700",
-    COMPLETED: "bg-emerald-100 text-emerald-700",
+    DELIVERED: "bg-emerald-100 text-emerald-700",
     CANCELLED: "bg-red-100 text-red-700",
   };
   return (

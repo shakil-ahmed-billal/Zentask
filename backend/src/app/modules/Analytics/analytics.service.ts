@@ -26,7 +26,7 @@ const getLeaderDashboardStats = async (filters: {
   if (Object.keys(dateFilter).length) where.createdAt = dateFilter;
   if (status) where.status = status;
   if (memberId) where.members = { some: { userId: memberId } };
-  if (search) where.name = { contains: search, mode: "insensitive" };
+  if (search) where.title = { contains: search, mode: "insensitive" };
 
   const [
     totalProjects,
@@ -41,13 +41,13 @@ const getLeaderDashboardStats = async (filters: {
     recentProjects,
   ] = await Promise.all([
     prisma.project.count({ where }),
-    prisma.project.count({ where: { ...where, status: "COMPLETED" } }),
+    prisma.project.count({ where: { ...where, status: "DELIVERED" } }),
     prisma.project.count({ where: { ...where, status: "PENDING" } }),
     prisma.project.count({ where: { ...where, status: "CANCELLED" } }),
     prisma.project.count({ where: { ...where, status: "IN_PROGRESS" } }),
     prisma.project.aggregate({ where, _sum: { deliveryValue: true } }),
     prisma.project.aggregate({
-      where: { ...where, status: "COMPLETED" },
+      where: { ...where, status: "DELIVERED" },
       _sum: { deliveryValue: true },
     }),
     prisma.project.aggregate({
@@ -74,9 +74,7 @@ const getLeaderDashboardStats = async (filters: {
       cancelledProjects,
       inProgressProjects,
       totalDeliveryValue: totalDeliveryValue._sum.deliveryValue || 0,
-      completedValue: completedValue._sum.deliveryValue || 0,
-      pendingValue: pendingValue._sum.deliveryValue || 0,
-      cancelledValue: cancelledValue._sum.deliveryValue || 0,
+      deliveredValue: completedValue._sum.deliveryValue || 0,
     },
     recentProjects,
   };
@@ -85,9 +83,41 @@ const getLeaderDashboardStats = async (filters: {
 // ──────────────────────────────────────────
 // Member Stats
 // ──────────────────────────────────────────
-const getMemberDashboardStats = async (userId: string) => {
+const getMemberDashboardStats = async (
+  userId: string,
+  filters?: {
+    status?: string;
+    search?: string;
+    fromDate?: string;
+    toDate?: string;
+    month?: string;
+    year?: string;
+  },
+) => {
   const sevenDaysFromNow = new Date();
   sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+  const where: any = {
+    OR: [{ leaderId: userId }, { members: { some: { userId } } }],
+  };
+
+  if (filters?.status) where.status = filters.status;
+  if (filters?.search) {
+    where.title = { contains: filters.search, mode: "insensitive" };
+  }
+
+  const dateFilter: any = {};
+  if (filters?.fromDate) dateFilter.gte = new Date(filters.fromDate);
+  if (filters?.toDate) dateFilter.lte = new Date(filters.toDate);
+  if (filters?.month && filters?.year) {
+    const m = parseInt(filters.month);
+    const y = parseInt(filters.year);
+    dateFilter.gte = new Date(y, m - 1, 1);
+    dateFilter.lte = new Date(y, m, 0, 23, 59, 59);
+  }
+  if (Object.keys(dateFilter).length > 0) {
+    where.createdAt = dateFilter;
+  }
 
   const [
     totalProjects,
@@ -98,30 +128,30 @@ const getMemberDashboardStats = async (userId: string) => {
     upcomingDeadlines,
     recentProjects,
   ] = await Promise.all([
-    prisma.memberProject.count({ where: { userId } }),
-    prisma.memberProject.count({
-      where: { userId, project: { status: { not: "COMPLETED" } } },
+    prisma.project.count({ where }),
+    prisma.project.count({
+      where: { ...where, status: { not: "DELIVERED" } },
     }),
-    prisma.memberProject.count({
-      where: { userId, project: { status: "COMPLETED" } },
+    prisma.project.count({
+      where: { ...where, status: "DELIVERED" },
     }),
     prisma.project.aggregate({
-      where: { members: { some: { userId } }, status: "COMPLETED" },
+      where: { ...where, status: "DELIVERED" },
       _sum: { deliveryValue: true },
     }),
     prisma.project.aggregate({
-      where: { members: { some: { userId } }, status: { not: "COMPLETED" } },
+      where: { ...where, status: { not: "DELIVERED" } },
       _sum: { deliveryValue: true },
     }),
     prisma.project.findMany({
       where: {
-        members: { some: { userId } },
+        ...where,
         deadline: { gte: new Date(), lte: sevenDaysFromNow },
       },
       orderBy: { deadline: "asc" },
     }),
     prisma.project.findMany({
-      where: { members: { some: { userId } } },
+      where,
       take: 5,
       orderBy: { createdAt: "desc" },
     }),
@@ -178,10 +208,10 @@ const getLeaderReports = async (filters: {
     allMembers,
   ] = await Promise.all([
     prisma.project.count({ where }),
-    prisma.project.count({ where: { ...where, status: "COMPLETED" } }),
+    prisma.project.count({ where: { ...where, status: "DELIVERED" } }),
     prisma.project.aggregate({ where, _sum: { deliveryValue: true } }),
     prisma.project.aggregate({
-      where: { ...where, status: "COMPLETED" },
+      where: { ...where, status: "DELIVERED" },
       _sum: { deliveryValue: true },
     }),
     prisma.user.findMany({
@@ -206,14 +236,14 @@ const getLeaderReports = async (filters: {
           where: { createdAt: { gte: start, lte: end } },
         }),
         prisma.project.count({
-          where: { createdAt: { gte: start, lte: end }, status: "COMPLETED" },
+          where: { createdAt: { gte: start, lte: end }, status: "DELIVERED" },
         }),
         prisma.project.aggregate({
           where: { createdAt: { gte: start, lte: end } },
           _sum: { deliveryValue: true },
         }),
         prisma.project.aggregate({
-          where: { createdAt: { gte: start, lte: end }, status: "COMPLETED" },
+          where: { createdAt: { gte: start, lte: end }, status: "DELIVERED" },
           _sum: { deliveryValue: true },
         }),
       ]);
@@ -230,14 +260,14 @@ const getLeaderReports = async (filters: {
   const memberPerformance = allMembers.map((m) => {
     const total = m.projects.length;
     const completed = m.projects.filter(
-      (p) => p.project.status === "COMPLETED",
+      (p) => p.project.status === "DELIVERED",
     ).length;
     const totalVal = m.projects.reduce(
       (sum, p) => sum + (p.project.deliveryValue || 0),
       0,
     );
     const delivered = m.projects
-      .filter((p) => p.project.status === "COMPLETED")
+      .filter((p) => p.project.status === "DELIVERED")
       .reduce((sum, p) => sum + (p.project.deliveryValue || 0), 0);
     return {
       id: m.id,

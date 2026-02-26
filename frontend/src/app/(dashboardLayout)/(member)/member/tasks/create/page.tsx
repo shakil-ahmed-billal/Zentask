@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type Project = { id: string; name: string };
+type Project = { id: string; title: string };
 
 const TIPS = [
   "💡 Use action-based titles like 'Design login form' instead of 'Login'",
@@ -95,16 +95,22 @@ export default function CreateTaskPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">Select Project</label>
               <select
-                className="h-9 rounded-md border bg-background px-3 text-sm"
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm text-gray-900 dark:text-gray-100 w-full focus:ring-2 focus:ring-primary outline-none transition-all"
                 value={form.projectId}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, projectId: e.target.value }))
                 }
               >
-                <option value="">No Project (Personal Task)</option>
+                <option value="" className="text-gray-900">
+                  No Project (Personal Task)
+                </option>
                 {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
+                  <option
+                    key={p.id}
+                    value={p.id}
+                    className="text-gray-900 bg-white"
+                  >
+                    {p.title}
                   </option>
                 ))}
               </select>

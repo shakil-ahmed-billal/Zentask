@@ -16,9 +16,9 @@ type Member = {
 
 type Project = {
   id: string;
-  name: string;
+  title: string;
   status: string;
-  budget: number;
+  deliveryValue: number;
   deadline: string;
   tasks: { id: string; status: string }[];
 };
@@ -79,9 +79,9 @@ export default function MemberDetailPage() {
   const avgProgress =
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const completedProjects = projects.filter(
-    (p) => p.status === "COMPLETED",
+    (p) => p.status === "DELIVERED",
   ).length;
-  const totalValue = projects.reduce((s, p) => s + (p.budget || 0), 0);
+  const totalValue = projects.reduce((s, p) => s + (p.deliveryValue || 0), 0);
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto">
@@ -146,7 +146,7 @@ export default function MemberDetailPage() {
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <PerfCard label="Total Projects" value={projects.length} />
         <PerfCard
-          label="Completed"
+          label="Delivered"
           value={completedProjects}
           color="text-emerald-600"
         />
@@ -181,7 +181,7 @@ export default function MemberDetailPage() {
               <th className="px-4 py-3 text-left">Project Name</th>
               <th className="px-4 py-3 text-left">Status</th>
               <th className="px-4 py-3 text-center">Progress</th>
-              <th className="px-4 py-3 text-right">Budget</th>
+              <th className="px-4 py-3 text-right">Value</th>
               <th className="px-4 py-3 text-left">Deadline</th>
             </tr>
           </thead>
@@ -203,7 +203,7 @@ export default function MemberDetailPage() {
                 const pct = total > 0 ? Math.round((done / total) * 100) : 0;
                 return (
                   <tr key={p.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium">{p.name}</td>
+                    <td className="px-4 py-3 font-medium">{p.title}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={p.status} />
                     </td>
@@ -219,7 +219,7 @@ export default function MemberDetailPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      ${p.budget?.toLocaleString()}
+                      ${p.deliveryValue?.toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-xs">
                       {p.deadline
@@ -258,7 +258,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     PENDING: "bg-yellow-100 text-yellow-700",
     IN_PROGRESS: "bg-blue-100 text-blue-700",
-    COMPLETED: "bg-emerald-100 text-emerald-700",
+    DELIVERED: "bg-emerald-100 text-emerald-700",
     CANCELLED: "bg-red-100 text-red-700",
   };
   return (

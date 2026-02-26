@@ -9,7 +9,7 @@ type Task = {
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
   priority: "LOW" | "MEDIUM" | "HIGH";
   deadline?: string;
-  project?: { id: string; name: string };
+  project?: { id: string; title: string };
 };
 
 type TaskStats = {
@@ -204,8 +204,8 @@ export default function MemberTasksPage() {
                       className="hover:bg-muted/30 transition-colors"
                     >
                       <td className="px-4 py-3 font-medium">{t.title}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">
-                        {t.project?.name ?? "—"}
+                      <td className="px-4 py-3 text-muted-foreground text-xs text-foreground">
+                        {t.project?.title ?? "—"}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <PriorityBadge priority={t.priority} />

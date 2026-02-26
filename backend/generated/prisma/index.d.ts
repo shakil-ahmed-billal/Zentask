@@ -77,7 +77,7 @@ export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
 export const ProjectStatus: {
   PENDING: 'PENDING',
   IN_PROGRESS: 'IN_PROGRESS',
-  COMPLETED: 'COMPLETED',
+  DELIVERED: 'DELIVERED',
   CANCELLED: 'CANCELLED'
 };
 
@@ -6347,15 +6347,11 @@ export namespace Prisma {
   }
 
   export type ProjectAvgAggregateOutputType = {
-    budget: number | null
-    amount: number | null
     deliveryValue: number | null
     progress: number | null
   }
 
   export type ProjectSumAggregateOutputType = {
-    budget: number | null
-    amount: number | null
     deliveryValue: number | null
     progress: number | null
   }
@@ -6364,8 +6360,6 @@ export namespace Prisma {
     id: string | null
     title: string | null
     description: string | null
-    budget: number | null
-    amount: number | null
     deliveryValue: number | null
     progress: number | null
     startDate: Date | null
@@ -6385,8 +6379,6 @@ export namespace Prisma {
     id: string | null
     title: string | null
     description: string | null
-    budget: number | null
-    amount: number | null
     deliveryValue: number | null
     progress: number | null
     startDate: Date | null
@@ -6406,8 +6398,6 @@ export namespace Prisma {
     id: number
     title: number
     description: number
-    budget: number
-    amount: number
     deliveryValue: number
     progress: number
     startDate: number
@@ -6426,15 +6416,11 @@ export namespace Prisma {
 
 
   export type ProjectAvgAggregateInputType = {
-    budget?: true
-    amount?: true
     deliveryValue?: true
     progress?: true
   }
 
   export type ProjectSumAggregateInputType = {
-    budget?: true
-    amount?: true
     deliveryValue?: true
     progress?: true
   }
@@ -6443,8 +6429,6 @@ export namespace Prisma {
     id?: true
     title?: true
     description?: true
-    budget?: true
-    amount?: true
     deliveryValue?: true
     progress?: true
     startDate?: true
@@ -6464,8 +6448,6 @@ export namespace Prisma {
     id?: true
     title?: true
     description?: true
-    budget?: true
-    amount?: true
     deliveryValue?: true
     progress?: true
     startDate?: true
@@ -6485,8 +6467,6 @@ export namespace Prisma {
     id?: true
     title?: true
     description?: true
-    budget?: true
-    amount?: true
     deliveryValue?: true
     progress?: true
     startDate?: true
@@ -6593,8 +6573,6 @@ export namespace Prisma {
     id: string
     title: string
     description: string | null
-    budget: number
-    amount: number
     deliveryValue: number
     progress: number
     startDate: Date
@@ -6633,8 +6611,6 @@ export namespace Prisma {
     id?: boolean
     title?: boolean
     description?: boolean
-    budget?: boolean
-    amount?: boolean
     deliveryValue?: boolean
     progress?: boolean
     startDate?: boolean
@@ -6659,8 +6635,6 @@ export namespace Prisma {
     id?: boolean
     title?: boolean
     description?: boolean
-    budget?: boolean
-    amount?: boolean
     deliveryValue?: boolean
     progress?: boolean
     startDate?: boolean
@@ -6681,8 +6655,6 @@ export namespace Prisma {
     id?: boolean
     title?: boolean
     description?: boolean
-    budget?: boolean
-    amount?: boolean
     deliveryValue?: boolean
     progress?: boolean
     startDate?: boolean
@@ -6703,8 +6675,6 @@ export namespace Prisma {
     id?: boolean
     title?: boolean
     description?: boolean
-    budget?: boolean
-    amount?: boolean
     deliveryValue?: boolean
     progress?: boolean
     startDate?: boolean
@@ -6720,7 +6690,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ProjectOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "budget" | "amount" | "deliveryValue" | "progress" | "startDate" | "deadline" | "status" | "leaderId" | "memberId" | "telegramURL" | "sheetURL" | "projectPhotoURL" | "websiteURL" | "createdAt" | "updatedAt", ExtArgs["result"]["project"]>
+  export type ProjectOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "deliveryValue" | "progress" | "startDate" | "deadline" | "status" | "leaderId" | "memberId" | "telegramURL" | "sheetURL" | "projectPhotoURL" | "websiteURL" | "createdAt" | "updatedAt", ExtArgs["result"]["project"]>
   export type ProjectInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     leader?: boolean | UserDefaultArgs<ExtArgs>
     members?: boolean | Project$membersArgs<ExtArgs>
@@ -6747,8 +6717,6 @@ export namespace Prisma {
       id: string
       title: string
       description: string | null
-      budget: number
-      amount: number
       deliveryValue: number
       progress: number
       startDate: Date
@@ -7192,8 +7160,6 @@ export namespace Prisma {
     readonly id: FieldRef<"Project", 'String'>
     readonly title: FieldRef<"Project", 'String'>
     readonly description: FieldRef<"Project", 'String'>
-    readonly budget: FieldRef<"Project", 'Float'>
-    readonly amount: FieldRef<"Project", 'Float'>
     readonly deliveryValue: FieldRef<"Project", 'Float'>
     readonly progress: FieldRef<"Project", 'Float'>
     readonly startDate: FieldRef<"Project", 'DateTime'>
@@ -8889,8 +8855,8 @@ export namespace Prisma {
     description: string | null
     priority: $Enums.Priority
     status: $Enums.TaskStatus
-    deadline: Date
-    projectId: string
+    deadline: Date | null
+    projectId: string | null
     memberId: string
     createdAt: Date
     updatedAt: Date
@@ -8924,7 +8890,7 @@ export namespace Prisma {
     memberId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    project?: boolean | Task$projectArgs<ExtArgs>
     member?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["task"]>
 
@@ -8939,7 +8905,7 @@ export namespace Prisma {
     memberId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    project?: boolean | Task$projectArgs<ExtArgs>
     member?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["task"]>
 
@@ -8954,7 +8920,7 @@ export namespace Prisma {
     memberId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    project?: boolean | Task$projectArgs<ExtArgs>
     member?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["task"]>
 
@@ -8973,22 +8939,22 @@ export namespace Prisma {
 
   export type TaskOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "priority" | "status" | "deadline" | "projectId" | "memberId" | "createdAt" | "updatedAt", ExtArgs["result"]["task"]>
   export type TaskInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    project?: boolean | Task$projectArgs<ExtArgs>
     member?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type TaskIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    project?: boolean | Task$projectArgs<ExtArgs>
     member?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type TaskIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    project?: boolean | Task$projectArgs<ExtArgs>
     member?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $TaskPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Task"
     objects: {
-      project: Prisma.$ProjectPayload<ExtArgs>
+      project: Prisma.$ProjectPayload<ExtArgs> | null
       member: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -8997,8 +8963,8 @@ export namespace Prisma {
       description: string | null
       priority: $Enums.Priority
       status: $Enums.TaskStatus
-      deadline: Date
-      projectId: string
+      deadline: Date | null
+      projectId: string | null
       memberId: string
       createdAt: Date
       updatedAt: Date
@@ -9396,7 +9362,7 @@ export namespace Prisma {
    */
   export interface Prisma__TaskClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    project<T extends ProjectDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProjectDefaultArgs<ExtArgs>>): Prisma__ProjectClient<$Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    project<T extends Task$projectArgs<ExtArgs> = {}>(args?: Subset<T, Task$projectArgs<ExtArgs>>): Prisma__ProjectClient<$Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     member<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -9830,6 +9796,25 @@ export namespace Prisma {
      * Limit how many Tasks to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Task.project
+   */
+  export type Task$projectArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Project
+     */
+    select?: ProjectSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Project
+     */
+    omit?: ProjectOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectInclude<ExtArgs> | null
+    where?: ProjectWhereInput
   }
 
   /**
@@ -11017,8 +11002,6 @@ export namespace Prisma {
     id: 'id',
     title: 'title',
     description: 'description',
-    budget: 'budget',
-    amount: 'amount',
     deliveryValue: 'deliveryValue',
     progress: 'progress',
     startDate: 'startDate',
@@ -11577,8 +11560,6 @@ export namespace Prisma {
     id?: StringFilter<"Project"> | string
     title?: StringFilter<"Project"> | string
     description?: StringNullableFilter<"Project"> | string | null
-    budget?: FloatFilter<"Project"> | number
-    amount?: FloatFilter<"Project"> | number
     deliveryValue?: FloatFilter<"Project"> | number
     progress?: FloatFilter<"Project"> | number
     startDate?: DateTimeFilter<"Project"> | Date | string
@@ -11602,8 +11583,6 @@ export namespace Prisma {
     id?: SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
-    budget?: SortOrder
-    amount?: SortOrder
     deliveryValue?: SortOrder
     progress?: SortOrder
     startDate?: SortOrder
@@ -11630,8 +11609,6 @@ export namespace Prisma {
     NOT?: ProjectWhereInput | ProjectWhereInput[]
     title?: StringFilter<"Project"> | string
     description?: StringNullableFilter<"Project"> | string | null
-    budget?: FloatFilter<"Project"> | number
-    amount?: FloatFilter<"Project"> | number
     deliveryValue?: FloatFilter<"Project"> | number
     progress?: FloatFilter<"Project"> | number
     startDate?: DateTimeFilter<"Project"> | Date | string
@@ -11655,8 +11632,6 @@ export namespace Prisma {
     id?: SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
-    budget?: SortOrder
-    amount?: SortOrder
     deliveryValue?: SortOrder
     progress?: SortOrder
     startDate?: SortOrder
@@ -11684,8 +11659,6 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Project"> | string
     title?: StringWithAggregatesFilter<"Project"> | string
     description?: StringNullableWithAggregatesFilter<"Project"> | string | null
-    budget?: FloatWithAggregatesFilter<"Project"> | number
-    amount?: FloatWithAggregatesFilter<"Project"> | number
     deliveryValue?: FloatWithAggregatesFilter<"Project"> | number
     progress?: FloatWithAggregatesFilter<"Project"> | number
     startDate?: DateTimeWithAggregatesFilter<"Project"> | Date | string
@@ -11754,12 +11727,12 @@ export namespace Prisma {
     description?: StringNullableFilter<"Task"> | string | null
     priority?: EnumPriorityFilter<"Task"> | $Enums.Priority
     status?: EnumTaskStatusFilter<"Task"> | $Enums.TaskStatus
-    deadline?: DateTimeFilter<"Task"> | Date | string
-    projectId?: StringFilter<"Task"> | string
+    deadline?: DateTimeNullableFilter<"Task"> | Date | string | null
+    projectId?: StringNullableFilter<"Task"> | string | null
     memberId?: StringFilter<"Task"> | string
     createdAt?: DateTimeFilter<"Task"> | Date | string
     updatedAt?: DateTimeFilter<"Task"> | Date | string
-    project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
+    project?: XOR<ProjectNullableScalarRelationFilter, ProjectWhereInput> | null
     member?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
@@ -11769,8 +11742,8 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     priority?: SortOrder
     status?: SortOrder
-    deadline?: SortOrder
-    projectId?: SortOrder
+    deadline?: SortOrderInput | SortOrder
+    projectId?: SortOrderInput | SortOrder
     memberId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -11787,12 +11760,12 @@ export namespace Prisma {
     description?: StringNullableFilter<"Task"> | string | null
     priority?: EnumPriorityFilter<"Task"> | $Enums.Priority
     status?: EnumTaskStatusFilter<"Task"> | $Enums.TaskStatus
-    deadline?: DateTimeFilter<"Task"> | Date | string
-    projectId?: StringFilter<"Task"> | string
+    deadline?: DateTimeNullableFilter<"Task"> | Date | string | null
+    projectId?: StringNullableFilter<"Task"> | string | null
     memberId?: StringFilter<"Task"> | string
     createdAt?: DateTimeFilter<"Task"> | Date | string
     updatedAt?: DateTimeFilter<"Task"> | Date | string
-    project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
+    project?: XOR<ProjectNullableScalarRelationFilter, ProjectWhereInput> | null
     member?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id">
 
@@ -11802,8 +11775,8 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     priority?: SortOrder
     status?: SortOrder
-    deadline?: SortOrder
-    projectId?: SortOrder
+    deadline?: SortOrderInput | SortOrder
+    projectId?: SortOrderInput | SortOrder
     memberId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -11821,8 +11794,8 @@ export namespace Prisma {
     description?: StringNullableWithAggregatesFilter<"Task"> | string | null
     priority?: EnumPriorityWithAggregatesFilter<"Task"> | $Enums.Priority
     status?: EnumTaskStatusWithAggregatesFilter<"Task"> | $Enums.TaskStatus
-    deadline?: DateTimeWithAggregatesFilter<"Task"> | Date | string
-    projectId?: StringWithAggregatesFilter<"Task"> | string
+    deadline?: DateTimeNullableWithAggregatesFilter<"Task"> | Date | string | null
+    projectId?: StringNullableWithAggregatesFilter<"Task"> | string | null
     memberId?: StringWithAggregatesFilter<"Task"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Task"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Task"> | Date | string
@@ -12272,8 +12245,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -12296,8 +12267,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -12320,8 +12289,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12344,8 +12311,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12368,8 +12333,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -12389,8 +12352,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12409,8 +12370,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12466,10 +12425,10 @@ export namespace Prisma {
     description?: string | null
     priority?: $Enums.Priority
     status?: $Enums.TaskStatus
-    deadline: Date | string
+    deadline?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    project: ProjectCreateNestedOneWithoutTasksInput
+    project?: ProjectCreateNestedOneWithoutTasksInput
     member: UserCreateNestedOneWithoutTasksInput
   }
 
@@ -12479,8 +12438,8 @@ export namespace Prisma {
     description?: string | null
     priority?: $Enums.Priority
     status?: $Enums.TaskStatus
-    deadline: Date | string
-    projectId: string
+    deadline?: Date | string | null
+    projectId?: string | null
     memberId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -12492,10 +12451,10 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    project?: ProjectUpdateOneRequiredWithoutTasksNestedInput
+    project?: ProjectUpdateOneWithoutTasksNestedInput
     member?: UserUpdateOneRequiredWithoutTasksNestedInput
   }
 
@@ -12505,8 +12464,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
-    projectId?: StringFieldUpdateOperationsInput | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     memberId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12518,8 +12477,8 @@ export namespace Prisma {
     description?: string | null
     priority?: $Enums.Priority
     status?: $Enums.TaskStatus
-    deadline: Date | string
-    projectId: string
+    deadline?: Date | string | null
+    projectId?: string | null
     memberId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -12531,7 +12490,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12542,8 +12501,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
-    projectId?: StringFieldUpdateOperationsInput | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     memberId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -13026,8 +12985,6 @@ export namespace Prisma {
     id?: SortOrder
     title?: SortOrder
     description?: SortOrder
-    budget?: SortOrder
-    amount?: SortOrder
     deliveryValue?: SortOrder
     progress?: SortOrder
     startDate?: SortOrder
@@ -13044,8 +13001,6 @@ export namespace Prisma {
   }
 
   export type ProjectAvgOrderByAggregateInput = {
-    budget?: SortOrder
-    amount?: SortOrder
     deliveryValue?: SortOrder
     progress?: SortOrder
   }
@@ -13054,8 +13009,6 @@ export namespace Prisma {
     id?: SortOrder
     title?: SortOrder
     description?: SortOrder
-    budget?: SortOrder
-    amount?: SortOrder
     deliveryValue?: SortOrder
     progress?: SortOrder
     startDate?: SortOrder
@@ -13075,8 +13028,6 @@ export namespace Prisma {
     id?: SortOrder
     title?: SortOrder
     description?: SortOrder
-    budget?: SortOrder
-    amount?: SortOrder
     deliveryValue?: SortOrder
     progress?: SortOrder
     startDate?: SortOrder
@@ -13093,8 +13044,6 @@ export namespace Prisma {
   }
 
   export type ProjectSumOrderByAggregateInput = {
-    budget?: SortOrder
-    amount?: SortOrder
     deliveryValue?: SortOrder
     progress?: SortOrder
   }
@@ -13164,6 +13113,11 @@ export namespace Prisma {
     not?: NestedEnumTaskStatusFilter<$PrismaModel> | $Enums.TaskStatus
   }
 
+  export type ProjectNullableScalarRelationFilter = {
+    is?: ProjectWhereInput | null
+    isNot?: ProjectWhereInput | null
+  }
+
   export type TaskCountOrderByAggregateInput = {
     id?: SortOrder
     title?: SortOrder
@@ -13221,11 +13175,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumTaskStatusFilter<$PrismaModel>
     _max?: NestedEnumTaskStatusFilter<$PrismaModel>
-  }
-
-  export type ProjectNullableScalarRelationFilter = {
-    is?: ProjectWhereInput | null
-    isNot?: ProjectWhereInput | null
   }
 
   export type ActivityLogCountOrderByAggregateInput = {
@@ -13818,10 +13767,12 @@ export namespace Prisma {
     set?: $Enums.TaskStatus
   }
 
-  export type ProjectUpdateOneRequiredWithoutTasksNestedInput = {
+  export type ProjectUpdateOneWithoutTasksNestedInput = {
     create?: XOR<ProjectCreateWithoutTasksInput, ProjectUncheckedCreateWithoutTasksInput>
     connectOrCreate?: ProjectCreateOrConnectWithoutTasksInput
     upsert?: ProjectUpsertWithoutTasksInput
+    disconnect?: ProjectWhereInput | boolean
+    delete?: ProjectWhereInput | boolean
     connect?: ProjectWhereUniqueInput
     update?: XOR<XOR<ProjectUpdateToOneWithWhereWithoutTasksInput, ProjectUpdateWithoutTasksInput>, ProjectUncheckedUpdateWithoutTasksInput>
   }
@@ -14316,10 +14267,10 @@ export namespace Prisma {
     description?: string | null
     priority?: $Enums.Priority
     status?: $Enums.TaskStatus
-    deadline: Date | string
+    deadline?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    project: ProjectCreateNestedOneWithoutTasksInput
+    project?: ProjectCreateNestedOneWithoutTasksInput
   }
 
   export type TaskUncheckedCreateWithoutMemberInput = {
@@ -14328,8 +14279,8 @@ export namespace Prisma {
     description?: string | null
     priority?: $Enums.Priority
     status?: $Enums.TaskStatus
-    deadline: Date | string
-    projectId: string
+    deadline?: Date | string | null
+    projectId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -14348,8 +14299,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -14371,8 +14320,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -14625,8 +14572,8 @@ export namespace Prisma {
     description?: StringNullableFilter<"Task"> | string | null
     priority?: EnumPriorityFilter<"Task"> | $Enums.Priority
     status?: EnumTaskStatusFilter<"Task"> | $Enums.TaskStatus
-    deadline?: DateTimeFilter<"Task"> | Date | string
-    projectId?: StringFilter<"Task"> | string
+    deadline?: DateTimeNullableFilter<"Task"> | Date | string | null
+    projectId?: StringNullableFilter<"Task"> | string | null
     memberId?: StringFilter<"Task"> | string
     createdAt?: DateTimeFilter<"Task"> | Date | string
     updatedAt?: DateTimeFilter<"Task"> | Date | string
@@ -14655,8 +14602,6 @@ export namespace Prisma {
     id?: StringFilter<"Project"> | string
     title?: StringFilter<"Project"> | string
     description?: StringNullableFilter<"Project"> | string | null
-    budget?: FloatFilter<"Project"> | number
-    amount?: FloatFilter<"Project"> | number
     deliveryValue?: FloatFilter<"Project"> | number
     progress?: FloatFilter<"Project"> | number
     startDate?: DateTimeFilter<"Project"> | Date | string
@@ -14970,7 +14915,7 @@ export namespace Prisma {
     description?: string | null
     priority?: $Enums.Priority
     status?: $Enums.TaskStatus
-    deadline: Date | string
+    deadline?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     member: UserCreateNestedOneWithoutTasksInput
@@ -14982,7 +14927,7 @@ export namespace Prisma {
     description?: string | null
     priority?: $Enums.Priority
     status?: $Enums.TaskStatus
-    deadline: Date | string
+    deadline?: Date | string | null
     memberId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -15174,8 +15119,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -15197,8 +15140,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -15289,8 +15230,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15312,8 +15251,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15335,8 +15272,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -15358,8 +15293,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -15444,8 +15377,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15467,8 +15398,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15590,8 +15519,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -15613,8 +15540,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -15705,8 +15630,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15728,8 +15651,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15796,8 +15717,8 @@ export namespace Prisma {
     description?: string | null
     priority?: $Enums.Priority
     status?: $Enums.TaskStatus
-    deadline: Date | string
-    projectId: string
+    deadline?: Date | string | null
+    projectId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -15806,8 +15727,6 @@ export namespace Prisma {
     id?: string
     title: string
     description?: string | null
-    budget?: number
-    amount?: number
     deliveryValue?: number
     progress?: number
     startDate?: Date | string
@@ -15978,10 +15897,10 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    project?: ProjectUpdateOneRequiredWithoutTasksNestedInput
+    project?: ProjectUpdateOneWithoutTasksNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutMemberInput = {
@@ -15990,8 +15909,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
-    projectId?: StringFieldUpdateOperationsInput | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -16002,8 +15921,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
-    projectId?: StringFieldUpdateOperationsInput | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -16012,8 +15931,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16035,8 +15952,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16058,8 +15973,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    budget?: FloatFieldUpdateOperationsInput | number
-    amount?: FloatFieldUpdateOperationsInput | number
     deliveryValue?: FloatFieldUpdateOperationsInput | number
     progress?: FloatFieldUpdateOperationsInput | number
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16105,7 +16018,7 @@ export namespace Prisma {
     description?: string | null
     priority?: $Enums.Priority
     status?: $Enums.TaskStatus
-    deadline: Date | string
+    deadline?: Date | string | null
     memberId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -16136,7 +16049,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     member?: UserUpdateOneRequiredWithoutTasksNestedInput
@@ -16148,7 +16061,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     memberId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16160,7 +16073,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     status?: EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
-    deadline?: DateTimeFieldUpdateOperationsInput | Date | string
+    deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     memberId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

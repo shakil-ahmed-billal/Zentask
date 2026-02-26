@@ -175,8 +175,6 @@ exports.Prisma.ProjectScalarFieldEnum = {
   id: 'id',
   title: 'title',
   description: 'description',
-  budget: 'budget',
-  amount: 'amount',
   deliveryValue: 'deliveryValue',
   progress: 'progress',
   startDate: 'startDate',
@@ -245,7 +243,7 @@ exports.UserStatus = exports.$Enums.UserStatus = {
 exports.ProjectStatus = exports.$Enums.ProjectStatus = {
   PENDING: 'PENDING',
   IN_PROGRESS: 'IN_PROGRESS',
-  COMPLETED: 'COMPLETED',
+  DELIVERED: 'DELIVERED',
   CANCELLED: 'CANCELLED'
 };
 
