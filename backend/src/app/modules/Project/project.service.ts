@@ -42,12 +42,16 @@ const getAllProjectsFromDB = async (filters: {
 
   const dateFilter: any = {};
   if (fromDate) dateFilter.gte = new Date(fromDate);
-  if (toDate) dateFilter.lte = new Date(toDate);
+  if (toDate) {
+    const end = new Date(toDate);
+    end.setUTCHours(23, 59, 59, 999);
+    dateFilter.lte = end;
+  }
   if (month && year) {
     const m = parseInt(month);
     const y = parseInt(year);
-    dateFilter.gte = new Date(y, m - 1, 1);
-    dateFilter.lte = new Date(y, m, 0, 23, 59, 59);
+    dateFilter.gte = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+    dateFilter.lte = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
   }
   if (Object.keys(dateFilter).length) where.createdAt = dateFilter;
 
@@ -69,16 +73,43 @@ const getAllProjectsFromDB = async (filters: {
 
 const getMemberProjectsFromDB = async (
   userId: string,
-  filters?: { status?: string },
+  filters?: {
+    status?: string;
+    search?: string;
+    month?: string;
+    year?: string;
+    sortBy?: string;
+    sortOrder?: string;
+  },
 ) => {
   const where: any = {
     OR: [{ leaderId: userId }, { members: { some: { userId } } }],
   };
-  if (filters?.status) where.status = filters.status;
+
+  if (filters) {
+    const { status, search, month, year } = filters;
+    if (status) where.status = status;
+    if (search) where.title = { contains: search, mode: "insensitive" };
+
+    const dateFilter: any = {};
+    if (month && year) {
+      const m = parseInt(month);
+      const y = parseInt(year);
+      dateFilter.gte = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+      dateFilter.lte = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+    }
+    if (Object.keys(dateFilter).length) where.createdAt = dateFilter;
+  }
+
+  const validSortFields = ["createdAt", "deadline", "title"];
+  const sortBy = filters?.sortBy;
+  const sortOrder = filters?.sortOrder;
+  const orderByField =
+    sortBy && validSortFields.includes(sortBy) ? sortBy : "createdAt";
 
   return prisma.project.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: { [orderByField]: sortOrder === "asc" ? "asc" : "desc" },
     include: {
       leader: { select: { id: true, name: true } },
       members: { include: { user: { select: { id: true, name: true } } } },

@@ -1,8 +1,16 @@
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
+
 // src/app.ts
 import { toNodeHandler } from "better-auth/node";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express6 from "express";
+import dotenv2 from "dotenv";
+import express7 from "express";
 import morgan from "morgan";
 
 // src/app/lib/auth.ts
@@ -54,6 +62,7 @@ var auth = betterAuth({
       enabled: false
     },
     disableCSRFCheck: true
+    // Allow requests without Origin header (Postman, mobile apps, etc.)
   }
 });
 
@@ -85,7 +94,10 @@ var config_default = {
     expires_in: process.env.JWT_EXPIRES_IN,
     refresh_secret: process.env.JWT_REFRESH_SECRET,
     refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN
-  }
+  },
+  cloudinaryName: process.env.CLOUDINARY_CLOUD_NAME,
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET
 };
 
 // src/app/middlewares/globalErrorHandler.ts
@@ -121,7 +133,7 @@ var globalErrorHandler = (error, req, res, next) => {
 var globalErrorHandler_default = globalErrorHandler;
 
 // src/app/routes/index.ts
-import express5 from "express";
+import express6 from "express";
 
 // src/app/modules/Analytics/analytics.route.ts
 import { UserRole } from "@prisma/client";
@@ -1129,8 +1141,81 @@ router4.post(
 );
 var UserRoutes = router4;
 
-// src/app/routes/index.ts
+// src/app/modules/Upload/upload.route.ts
+import express5 from "express";
+
+// src/app/middlewares/upload.ts
+import multer from "multer";
+var upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024
+    // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed!"), false);
+    }
+  }
+});
+
+// src/app/modules/Upload/upload.controller.ts
+import httpStatus6 from "http-status";
+
+// src/app/utils/cloudinary.ts
+import { v2 as cloudinary } from "cloudinary";
+cloudinary.config({
+  cloud_name: config_default.cloudinaryName,
+  api_key: config_default.cloudinaryApiKey,
+  api_secret: config_default.cloudinaryApiSecret
+});
+var CloudinaryHelper = {
+  uploadImage: async (fileBuffer, folder = "zentask") => {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result?.secure_url);
+        }
+      );
+      const streamifier = __require("streamifier");
+      streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    });
+  }
+};
+
+// src/app/modules/Upload/upload.controller.ts
+var uploadImage = catchAsync_default(async (req, res) => {
+  if (!req.file) {
+    return sendResponse_default(res, {
+      statusCode: httpStatus6.BAD_REQUEST,
+      success: false,
+      message: "No image file provided.",
+      data: null
+    });
+  }
+  const url = await CloudinaryHelper.uploadImage(req.file.buffer);
+  sendResponse_default(res, {
+    statusCode: httpStatus6.OK,
+    success: true,
+    message: "Image uploaded successfully!",
+    data: { url }
+  });
+});
+var UploadController = {
+  uploadImage
+};
+
+// src/app/modules/Upload/upload.route.ts
 var router5 = express5.Router();
+router5.post("/", upload.single("image"), UploadController.uploadImage);
+var UploadRoutes = router5;
+
+// src/app/routes/index.ts
+var router6 = express6.Router();
 var moduleRoutes = [
   {
     path: "/analytics",
@@ -1147,24 +1232,28 @@ var moduleRoutes = [
   {
     path: "/tasks",
     route: TaskRoutes
+  },
+  {
+    path: "/upload",
+    route: UploadRoutes
   }
 ];
-moduleRoutes.forEach((route) => router5.use(route.path, route.route));
-var routes_default = router5;
+moduleRoutes.forEach((route) => router6.use(route.path, route.route));
+var routes_default = router6;
 
 // src/app.ts
-import dotenv2 from "dotenv";
 dotenv2.config();
-var app = express6();
+var app = express7();
 var allowedOrigins = [
   process.env.APP_URL || "http://localhost:3000",
   process.env.PROD_APP_URL
+  // Production frontend URL
 ].filter(Boolean);
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      const isAllowed = allowedOrigins.includes(origin);
+      const isAllowed = allowedOrigins.includes(origin) || /^https:\/\/.*\.vercel\.app$/.test(origin);
       if (isAllowed) {
         callback(null, true);
       } else {
@@ -1178,8 +1267,8 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(express6.json());
-app.use(express6.urlencoded({ extended: true }));
+app.use(express7.json());
+app.use(express7.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.all("/api/v1/auth/*splat", toNodeHandler(auth));

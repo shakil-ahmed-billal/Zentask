@@ -1,20 +1,45 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
+import { CloudinaryHelper } from "../../utils/cloudinary";
 import sendResponse from "../../utils/sendResponse";
 import { ProjectService } from "./project.service";
 
 const createProject = catchAsync(async (req: Request, res: Response) => {
-  const result = await ProjectService.createProjectInDB({
-    ...req.body,
-    leaderId: req.user?.id,
-  });
-  sendResponse(res, {
-    statusCode: httpStatus.CREATED,
-    success: true,
-    message: "Project created successfully",
-    data: result,
-  });
+  let projectPhotoURL = req.body.projectPhotoURL; // fall back to existing link if provided
+
+  if (req.file) {
+    projectPhotoURL = await CloudinaryHelper.uploadImage(req.file.buffer);
+  }
+
+  try {
+    const { deliveryValue, progress, ...rest } = req.body;
+    const projectData = {
+      ...rest,
+      ...(deliveryValue !== undefined && {
+        deliveryValue: Number(deliveryValue),
+      }),
+      ...(progress !== undefined && { progress: Number(progress) }),
+    };
+
+    const result = await ProjectService.createProjectInDB({
+      ...projectData,
+      leaderId: req.user?.id,
+      ...(projectPhotoURL && { projectPhotoURL }),
+    });
+
+    sendResponse(res, {
+      statusCode: httpStatus.CREATED,
+      success: true,
+      message: "Project created successfully",
+      data: result,
+    });
+  } catch (error) {
+    if (projectPhotoURL) {
+      await CloudinaryHelper.deleteImage(projectPhotoURL);
+    }
+    throw error;
+  }
 });
 
 const getAllProjects = catchAsync(async (req: Request, res: Response) => {
@@ -79,7 +104,32 @@ const updateProject = catchAsync(async (req: Request, res: Response) => {
     });
   }
 
-  const result = await ProjectService.updateProjectInDB(id as string, req.body);
+  let projectPhotoURL = req.body.projectPhotoURL;
+
+  if (req.file) {
+    projectPhotoURL = await CloudinaryHelper.uploadImage(req.file.buffer);
+    if (project.projectPhotoURL) {
+      // Background deletion of old image
+      CloudinaryHelper.deleteImage(project.projectPhotoURL).catch(
+        console.error,
+      );
+    }
+  }
+
+  const { deliveryValue, progress, ...rest } = req.body;
+  const updatePayload = {
+    ...rest,
+    ...(deliveryValue !== undefined && {
+      deliveryValue: Number(deliveryValue),
+    }),
+    ...(progress !== undefined && { progress: Number(progress) }),
+    ...(projectPhotoURL && { projectPhotoURL }),
+  };
+
+  const result = await ProjectService.updateProjectInDB(
+    id as string,
+    updatePayload,
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -89,7 +139,9 @@ const updateProject = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteProject = catchAsync(async (req: Request, res: Response) => {
-  const result = await ProjectService.deleteProjectFromDB(req.params.id as string);
+  const result = await ProjectService.deleteProjectFromDB(
+    req.params.id as string,
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

@@ -2,7 +2,7 @@
 
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Project = {
   id: string;
@@ -32,6 +32,10 @@ export default function LeaderProjectsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageDragOver, setImageDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -46,6 +50,11 @@ export default function LeaderProjectsPage() {
     status: "PENDING",
   });
 
+  const onImageSelect = (file: File) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setImageFile(file);
+  };
+
   const fetchProjects = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,7 +63,10 @@ export default function LeaderProjectsPage() {
       if (search) params.search = search;
       if (fromDate) params.fromDate = fromDate;
       if (toDate) params.toDate = toDate;
-      if (sortBy) params.sortBy = sortBy;
+      if (sortBy) {
+        params.sortBy = sortBy;
+        params.sortOrder = sortBy === "title" ? "asc" : "desc";
+      }
 
       const res = await api.get("/projects", { params });
       const data: Project[] = res.data.data ?? [];
@@ -77,34 +89,59 @@ export default function LeaderProjectsPage() {
     fetchProjects();
   }, [fetchProjects]);
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post("/projects/create-project", {
-      ...form,
-      deliveryValue: parseFloat(form.deliveryValue) || 0,
-      progress: parseFloat(form.progress) || 0,
-    });
-    setShowCreate(false);
-    setForm({
-      title: "",
-      description: "",
-      deliveryValue: "",
-      progress: "",
-      startDate: "",
-      deadline: "",
-      telegramURL: "",
-      sheetURL: "",
-      projectPhotoURL: "",
-      websiteURL: "",
-      status: "PENDING",
-    });
-    fetchProjects();
+    try {
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        if (key === "deliveryValue" || key === "progress") return;
+        formData.append(key, String(value));
+      });
+      formData.append(
+        "deliveryValue",
+        String(parseFloat(form.deliveryValue) || 0),
+      );
+      formData.append("progress", String(parseFloat(form.progress) || 0));
+
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      await api.post("/projects/create-project", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setShowCreate(false);
+      setImageFile(null);
+      setForm({
+        title: "",
+        description: "",
+        deliveryValue: "",
+        progress: "",
+        startDate: "",
+        deadline: "",
+        telegramURL: "",
+        sheetURL: "",
+        projectPhotoURL: "",
+        websiteURL: "",
+        status: "PENDING",
+      });
+      fetchProjects();
+    } catch (err) {
+      console.error("Failed to create project", err);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this project?")) return;
-    await api.delete(`/projects/${id}`);
-    fetchProjects();
+    try {
+      await api.delete(`/projects/${id}`);
+      fetchProjects();
+    } catch (err) {
+      console.error("Failed to delete project", err);
+    }
   };
 
   const handleEdit = (p: Project) => {
@@ -128,27 +165,46 @@ export default function LeaderProjectsPage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProject) return;
-    await api.patch(`/projects/${editingProject.id}`, {
-      ...form,
-      deliveryValue: parseFloat(form.deliveryValue) || 0,
-      progress: parseFloat(form.progress) || 0,
-    });
-    setShowEdit(false);
-    setEditingProject(null);
-    setForm({
-      title: "",
-      description: "",
-      deliveryValue: "",
-      progress: "",
-      startDate: "",
-      deadline: "",
-      telegramURL: "",
-      sheetURL: "",
-      projectPhotoURL: "",
-      websiteURL: "",
-      status: "PENDING",
-    });
-    fetchProjects();
+    try {
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        if (key === "deliveryValue" || key === "progress") return;
+        formData.append(key, String(value));
+      });
+      formData.append(
+        "deliveryValue",
+        String(parseFloat(form.deliveryValue) || 0),
+      );
+      formData.append("progress", String(parseFloat(form.progress) || 0));
+
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      await api.patch(`/projects/${editingProject.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setShowEdit(false);
+      setEditingProject(null);
+      setImageFile(null);
+      setForm({
+        title: "",
+        description: "",
+        deliveryValue: "",
+        progress: "",
+        startDate: "",
+        deadline: "",
+        telegramURL: "",
+        sheetURL: "",
+        projectPhotoURL: "",
+        websiteURL: "",
+        status: "PENDING",
+      });
+      fetchProjects();
+    } catch (err) {
+      console.error("Failed to update project", err);
+    }
   };
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
@@ -243,18 +299,18 @@ export default function LeaderProjectsPage() {
             onChange={(e) => setToDate(e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 w-32">
           <label className="text-xs font-medium text-muted-foreground">
             Sort By
           </label>
           <select
-            className="h-9 rounded-md border bg-background px-3 text-sm"
+            className="h-9 rounded-md border bg-background px-3 text-sm w-full"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
-            <option value="name">Name</option>
-            <option value="createdAt">Date Created</option>
+            <option value="createdAt">Newest First</option>
             <option value="deadline">Deadline</option>
+            <option value="title">Alphabetical</option>
           </select>
         </div>
         <button
@@ -263,6 +319,7 @@ export default function LeaderProjectsPage() {
             setSearch("");
             setFromDate("");
             setToDate("");
+            setSortBy("createdAt");
           }}
           className="h-9 px-4 rounded-md border text-sm hover:bg-muted transition-colors"
         >
@@ -405,6 +462,82 @@ export default function LeaderProjectsPage() {
               onSubmit={handleCreate}
               className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-2"
             >
+              {/* Banner Upload */}
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium">Project Banner</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) onImageSelect(file);
+                  }}
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setImageDragOver(true);
+                  }}
+                  onDragLeave={() => setImageDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setImageDragOver(false);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) onImageSelect(file);
+                  }}
+                  className={`relative w-full h-32 rounded-md border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors overflow-hidden ${
+                    imageDragOver
+                      ? "border-primary bg-primary/5"
+                      : "border-muted-foreground/30 hover:border-primary/50"
+                  }`}
+                >
+                  {imageUploading ? (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      <span className="text-xs">Uploading...</span>
+                    </div>
+                  ) : form.projectPhotoURL ? (
+                    <img
+                      src={form.projectPhotoURL}
+                      alt="Banner"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <svg
+                        className="size-8 opacity-50"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span className="text-xs">
+                        Click or drag to upload banner
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {form.projectPhotoURL && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((f) => ({ ...f, projectPhotoURL: "" }))
+                    }
+                    className="text-xs text-destructive hover:underline self-start"
+                  >
+                    Remove banner
+                  </button>
+                )}
+              </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">Project Title *</label>
                 <input
@@ -540,6 +673,84 @@ export default function LeaderProjectsPage() {
               onSubmit={handleUpdate}
               className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-2"
             >
+              {/* Banner Upload */}
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium">Project Banner</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) onImageSelect(file);
+                  }}
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setImageDragOver(true);
+                  }}
+                  onDragLeave={() => setImageDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setImageDragOver(false);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) onImageSelect(file);
+                  }}
+                  className={`relative w-full h-32 rounded-md border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors overflow-hidden ${
+                    imageDragOver
+                      ? "border-primary bg-primary/5"
+                      : "border-muted-foreground/30 hover:border-primary/50"
+                  }`}
+                >
+                  {imageFile ? (
+                    <img
+                      src={URL.createObjectURL(imageFile)}
+                      alt="Banner Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : form.projectPhotoURL ? (
+                    <img
+                      src={form.projectPhotoURL}
+                      alt="Banner"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <svg
+                        className="size-8 opacity-50"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span className="text-xs">
+                        Click or drag to upload banner
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {(imageFile || form.projectPhotoURL) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageFile(null);
+                      setForm((f) => ({ ...f, projectPhotoURL: "" }));
+                    }}
+                    className="text-xs text-destructive hover:underline self-start"
+                  >
+                    Remove banner
+                  </button>
+                )}
+              </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">Project Title *</label>
                 <input

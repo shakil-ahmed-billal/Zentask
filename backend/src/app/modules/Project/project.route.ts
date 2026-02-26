@@ -1,6 +1,7 @@
 import { UserRole } from "@prisma/client";
 import express from "express";
 import authMiddleware from "../../middlewares/auth";
+import { upload } from "../../middlewares/upload";
 import { ProjectController } from "./project.controller";
 
 const router = express.Router();
@@ -17,11 +18,13 @@ router.get("/:id", ProjectController.getSingleProject);
 router.post(
   "/create-project",
   authMiddleware(UserRole.LEADER, UserRole.MEMBER),
+  upload.single("image"),
   ProjectController.createProject,
 );
 router.patch(
   "/:id",
   authMiddleware(UserRole.LEADER, UserRole.MEMBER),
+  upload.single("image"),
   ProjectController.updateProject,
 );
 router.delete(
