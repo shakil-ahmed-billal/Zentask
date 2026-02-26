@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Forcing /api (no v1) to match backend standardization
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+const baseURL = "/api";
 
 export const api = axios.create({
   baseURL,

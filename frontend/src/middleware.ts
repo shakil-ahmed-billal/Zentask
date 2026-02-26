@@ -13,7 +13,7 @@ export async function middleware(request: NextRequest) {
 
   //* User is not authenticated at all
   if (!sessionToken) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   // Allow access if session exists

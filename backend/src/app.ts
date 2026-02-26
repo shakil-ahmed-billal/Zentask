@@ -1,29 +1,33 @@
 import { toNodeHandler } from "better-auth/node";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import dotenv from "dotenv";
 import express, { Application, Request, Response } from "express";
 import morgan from "morgan";
 import { auth } from "./app/lib/auth";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import router from "./app/routes";
-import dotenv from 'dotenv'
-dotenv.config()
+dotenv.config();
 
 const app: Application = express();
 
 // Configure CORS to allow both production and Vercel preview deployments
 const allowedOrigins = [
   process.env.APP_URL || "http://localhost:3000",
-  process.env.PROD_APP_URL,
-].filter(Boolean);
-
+  process.env.PROD_APP_URL, // Production frontend URL
+].filter(Boolean); // Remove undefined values
 
 app.use(
   cors({
     origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
       if (!origin) return callback(null, true);
+
+      // Check if origin is in allowedOrigins or matches Vercel preview pattern
       const isAllowed =
-        allowedOrigins.includes(origin)
+        allowedOrigins.includes(origin) ||
+        /^https:\/\/.*\.vercel\.app$/.test(origin); // Any Vercel deployment
+
       if (isAllowed) {
         callback(null, true);
       } else {
