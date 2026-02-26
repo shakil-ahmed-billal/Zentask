@@ -1153,6 +1153,8 @@ moduleRoutes.forEach((route) => router5.use(route.path, route.route));
 var routes_default = router5;
 
 // src/app.ts
+import dotenv2 from "dotenv";
+dotenv2.config();
 var app = express6();
 var allowedOrigins = [
   process.env.APP_URL || "http://localhost:3000",

@@ -6,6 +6,8 @@ import morgan from "morgan";
 import { auth } from "./app/lib/auth";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import router from "./app/routes";
+import dotenv from 'dotenv'
+dotenv.config()
 
 const app: Application = express();
 
