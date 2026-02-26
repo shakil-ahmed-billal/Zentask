@@ -10,7 +10,7 @@ import { toNodeHandler } from "better-auth/node";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv2 from "dotenv";
-import express7 from "express";
+import express6 from "express";
 import morgan from "morgan";
 
 // src/app/lib/auth.ts
@@ -33,7 +33,41 @@ var auth = betterAuth({
   }),
   trustedOrigins: [process.env.FRONTEND_ORIGIN],
   emailAndPassword: {
-    enabled: true
+    enabled: true,
+    sendResetPassword: async (data) => {
+      const nodemailer = await import("nodemailer");
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_SECURE === "true",
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASSWORD
+        }
+      });
+      await transporter.sendMail({
+        from: `"Zentask" <${process.env.SMTP_USER}>`,
+        to: data.user.email,
+        subject: "Reset your Zentask password",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:auto">
+            <h2 style="color:#1a1a1a">Reset your password</h2>
+            <p>Hi ${data.user.name ?? "there"},</p>
+            <p>We received a request to reset your password. Click the button below to choose a new one.</p>
+            <a href="${data.url}" style="display:inline-block;padding:12px 24px;background:#6366f1;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:16px 0">
+              Reset Password
+            </a>
+            <p style="color:#666;font-size:13px">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
+          </div>
+        `
+      });
+    }
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET
+    }
   },
   user: {
     additionalFields: {
@@ -133,7 +167,7 @@ var globalErrorHandler = (error, req, res, next) => {
 var globalErrorHandler_default = globalErrorHandler;
 
 // src/app/routes/index.ts
-import express6 from "express";
+import express5 from "express";
 
 // src/app/modules/Analytics/analytics.route.ts
 import { UserRole } from "@prisma/client";
@@ -506,8 +540,61 @@ var AnalyticsRoutes = router;
 import { UserRole as UserRole2 } from "@prisma/client";
 import express2 from "express";
 
+// src/app/middlewares/upload.ts
+import multer from "multer";
+var upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024
+    // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed!"), false);
+    }
+  }
+});
+
 // src/app/modules/Project/project.controller.ts
 import httpStatus3 from "http-status";
+
+// src/app/utils/cloudinary.ts
+import { v2 as cloudinary } from "cloudinary";
+cloudinary.config({
+  cloud_name: config_default.cloudinaryName,
+  api_key: config_default.cloudinaryApiKey,
+  api_secret: config_default.cloudinaryApiSecret
+});
+var CloudinaryHelper = {
+  uploadImage: async (fileBuffer, folder = "zentask") => {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result?.secure_url);
+        }
+      );
+      const streamifier = __require("streamifier");
+      streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    });
+  },
+  deleteImage: async (url) => {
+    try {
+      if (!url) return false;
+      const parts = url.split("/");
+      const filename = parts[parts.length - 1];
+      const publicId = filename.split(".")[0];
+      const result = await cloudinary.uploader.destroy(`zentask/${publicId}`);
+      return result.result === "ok";
+    } catch (error) {
+      console.error("Cloudinary deletion error:", error);
+      return false;
+    }
+  }
+};
 
 // src/app/modules/Project/project.service.ts
 var createProjectInDB = async (data) => {
@@ -538,12 +625,16 @@ var getAllProjectsFromDB = async (filters) => {
   if (search) where.title = { contains: search, mode: "insensitive" };
   const dateFilter = {};
   if (fromDate) dateFilter.gte = new Date(fromDate);
-  if (toDate) dateFilter.lte = new Date(toDate);
+  if (toDate) {
+    const end = new Date(toDate);
+    end.setUTCHours(23, 59, 59, 999);
+    dateFilter.lte = end;
+  }
   if (month && year) {
     const m = parseInt(month);
     const y = parseInt(year);
-    dateFilter.gte = new Date(y, m - 1, 1);
-    dateFilter.lte = new Date(y, m, 0, 23, 59, 59);
+    dateFilter.gte = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+    dateFilter.lte = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
   }
   if (Object.keys(dateFilter).length) where.createdAt = dateFilter;
   const validSortFields = ["createdAt", "deadline", "title"];
@@ -564,10 +655,26 @@ var getMemberProjectsFromDB = async (userId, filters) => {
   const where = {
     OR: [{ leaderId: userId }, { members: { some: { userId } } }]
   };
-  if (filters?.status) where.status = filters.status;
+  if (filters) {
+    const { status, search, month, year } = filters;
+    if (status) where.status = status;
+    if (search) where.title = { contains: search, mode: "insensitive" };
+    const dateFilter = {};
+    if (month && year) {
+      const m = parseInt(month);
+      const y = parseInt(year);
+      dateFilter.gte = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+      dateFilter.lte = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+    }
+    if (Object.keys(dateFilter).length) where.createdAt = dateFilter;
+  }
+  const validSortFields = ["createdAt", "deadline", "title"];
+  const sortBy = filters?.sortBy;
+  const sortOrder = filters?.sortOrder;
+  const orderByField = sortBy && validSortFields.includes(sortBy) ? sortBy : "createdAt";
   return prisma.project.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: { [orderByField]: sortOrder === "asc" ? "asc" : "desc" },
     include: {
       leader: { select: { id: true, name: true } },
       members: { include: { user: { select: { id: true, name: true } } } },
@@ -625,16 +732,36 @@ var ProjectService = {
 
 // src/app/modules/Project/project.controller.ts
 var createProject = catchAsync_default(async (req, res) => {
-  const result = await ProjectService.createProjectInDB({
-    ...req.body,
-    leaderId: req.user?.id
-  });
-  sendResponse_default(res, {
-    statusCode: httpStatus3.CREATED,
-    success: true,
-    message: "Project created successfully",
-    data: result
-  });
+  let projectPhotoURL = req.body.projectPhotoURL;
+  if (req.file) {
+    projectPhotoURL = await CloudinaryHelper.uploadImage(req.file.buffer);
+  }
+  try {
+    const { deliveryValue, progress, ...rest } = req.body;
+    const projectData = {
+      ...rest,
+      ...deliveryValue !== void 0 && {
+        deliveryValue: Number(deliveryValue)
+      },
+      ...progress !== void 0 && { progress: Number(progress) }
+    };
+    const result = await ProjectService.createProjectInDB({
+      ...projectData,
+      leaderId: req.user?.id,
+      ...projectPhotoURL && { projectPhotoURL }
+    });
+    sendResponse_default(res, {
+      statusCode: httpStatus3.CREATED,
+      success: true,
+      message: "Project created successfully",
+      data: result
+    });
+  } catch (error) {
+    if (projectPhotoURL) {
+      await CloudinaryHelper.deleteImage(projectPhotoURL);
+    }
+    throw error;
+  }
 });
 var getAllProjects = catchAsync_default(async (req, res) => {
   const result = await ProjectService.getAllProjectsFromDB(req.query);
@@ -690,7 +817,28 @@ var updateProject = catchAsync_default(async (req, res) => {
       data: null
     });
   }
-  const result = await ProjectService.updateProjectInDB(id, req.body);
+  let projectPhotoURL = req.body.projectPhotoURL;
+  if (req.file) {
+    projectPhotoURL = await CloudinaryHelper.uploadImage(req.file.buffer);
+    if (project.projectPhotoURL) {
+      CloudinaryHelper.deleteImage(project.projectPhotoURL).catch(
+        console.error
+      );
+    }
+  }
+  const { deliveryValue, progress, ...rest } = req.body;
+  const updatePayload = {
+    ...rest,
+    ...deliveryValue !== void 0 && {
+      deliveryValue: Number(deliveryValue)
+    },
+    ...progress !== void 0 && { progress: Number(progress) },
+    ...projectPhotoURL && { projectPhotoURL }
+  };
+  const result = await ProjectService.updateProjectInDB(
+    id,
+    updatePayload
+  );
   sendResponse_default(res, {
     statusCode: httpStatus3.OK,
     success: true,
@@ -699,7 +847,9 @@ var updateProject = catchAsync_default(async (req, res) => {
   });
 });
 var deleteProject = catchAsync_default(async (req, res) => {
-  const result = await ProjectService.deleteProjectFromDB(req.params.id);
+  const result = await ProjectService.deleteProjectFromDB(
+    req.params.id
+  );
   sendResponse_default(res, {
     statusCode: httpStatus3.OK,
     success: true,
@@ -755,11 +905,13 @@ router2.get("/:id", ProjectController.getSingleProject);
 router2.post(
   "/create-project",
   auth_default(UserRole2.LEADER, UserRole2.MEMBER),
+  upload.single("image"),
   ProjectController.createProject
 );
 router2.patch(
   "/:id",
   auth_default(UserRole2.LEADER, UserRole2.MEMBER),
+  upload.single("image"),
   ProjectController.updateProject
 );
 router2.delete(
@@ -1141,81 +1293,8 @@ router4.post(
 );
 var UserRoutes = router4;
 
-// src/app/modules/Upload/upload.route.ts
-import express5 from "express";
-
-// src/app/middlewares/upload.ts
-import multer from "multer";
-var upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024
-    // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only image files are allowed!"), false);
-    }
-  }
-});
-
-// src/app/modules/Upload/upload.controller.ts
-import httpStatus6 from "http-status";
-
-// src/app/utils/cloudinary.ts
-import { v2 as cloudinary } from "cloudinary";
-cloudinary.config({
-  cloud_name: config_default.cloudinaryName,
-  api_key: config_default.cloudinaryApiKey,
-  api_secret: config_default.cloudinaryApiSecret
-});
-var CloudinaryHelper = {
-  uploadImage: async (fileBuffer, folder = "zentask") => {
-    return new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        { folder },
-        (error, result) => {
-          if (error) return reject(error);
-          resolve(result?.secure_url);
-        }
-      );
-      const streamifier = __require("streamifier");
-      streamifier.createReadStream(fileBuffer).pipe(uploadStream);
-    });
-  }
-};
-
-// src/app/modules/Upload/upload.controller.ts
-var uploadImage = catchAsync_default(async (req, res) => {
-  if (!req.file) {
-    return sendResponse_default(res, {
-      statusCode: httpStatus6.BAD_REQUEST,
-      success: false,
-      message: "No image file provided.",
-      data: null
-    });
-  }
-  const url = await CloudinaryHelper.uploadImage(req.file.buffer);
-  sendResponse_default(res, {
-    statusCode: httpStatus6.OK,
-    success: true,
-    message: "Image uploaded successfully!",
-    data: { url }
-  });
-});
-var UploadController = {
-  uploadImage
-};
-
-// src/app/modules/Upload/upload.route.ts
-var router5 = express5.Router();
-router5.post("/", upload.single("image"), UploadController.uploadImage);
-var UploadRoutes = router5;
-
 // src/app/routes/index.ts
-var router6 = express6.Router();
+var router5 = express5.Router();
 var moduleRoutes = [
   {
     path: "/analytics",
@@ -1232,18 +1311,14 @@ var moduleRoutes = [
   {
     path: "/tasks",
     route: TaskRoutes
-  },
-  {
-    path: "/upload",
-    route: UploadRoutes
   }
 ];
-moduleRoutes.forEach((route) => router6.use(route.path, route.route));
-var routes_default = router6;
+moduleRoutes.forEach((route) => router5.use(route.path, route.route));
+var routes_default = router5;
 
 // src/app.ts
 dotenv2.config();
-var app = express7();
+var app = express6();
 var allowedOrigins = [
   process.env.APP_URL || "http://localhost:3000",
   process.env.PROD_APP_URL
@@ -1267,8 +1342,8 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(express7.json());
-app.use(express7.urlencoded({ extended: true }));
+app.use(express6.json());
+app.use(express6.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.all("/api/v1/auth/*splat", toNodeHandler(auth));
