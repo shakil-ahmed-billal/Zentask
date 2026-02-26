@@ -11,6 +11,23 @@ export const auth = betterAuth({
   trustedOrigins: [process.env.FRONTEND_ORIGIN as string],
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async (data, request) => {
+      // In a real application, you would use an email service like Resend or Nodemailer
+      console.log();
+      console.log("==========================================");
+      console.log(`🔐 PASSWORD RESET REQUEST`);
+      console.log(`To: ${data.user.email}`);
+      console.log(`Click this link to reset your password:`);
+      console.log(`🔗 ${data.url}`);
+      console.log("==========================================");
+      console.log();
+    },
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
   },
   user: {
     additionalFields: {

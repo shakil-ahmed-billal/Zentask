@@ -240,7 +240,7 @@ export default function DashboardLayout({
                   asChild
                   className="rounded-lg px-2 py-2 text-sm cursor-pointer gap-2.5"
                 >
-                  <Link href="/settings">
+                  <Link href="/profile">
                     <User className="size-4 text-muted-foreground shrink-0" />
                     Profile Settings
                   </Link>
@@ -250,7 +250,7 @@ export default function DashboardLayout({
                   asChild
                   className="rounded-lg px-2 py-2 text-sm cursor-pointer gap-2.5"
                 >
-                  <Link href="/settings">
+                  <Link href="/profile">
                     <Settings className="size-4 text-muted-foreground shrink-0" />
                     Account Settings
                   </Link>
