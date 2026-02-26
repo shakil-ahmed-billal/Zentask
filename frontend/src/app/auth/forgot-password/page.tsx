@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
     try {
       await authClient.requestPasswordReset({
         email,
-        redirectTo: "/auth/reset-password",
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
       setSent(true);
     } catch (err: any) {

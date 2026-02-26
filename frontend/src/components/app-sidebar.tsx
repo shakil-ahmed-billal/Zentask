@@ -40,7 +40,7 @@ const LEADER_NAV = [
   },
   {
     title: "Account",
-    items: [{ title: "Settings", url: "/settings", icon: Settings2 }],
+    items: [{ title: "Profile", url: "/profile", icon: Settings2 }],
   },
 ];
 
@@ -56,7 +56,7 @@ const MEMBER_NAV = [
   },
   {
     title: "Account",
-    items: [{ title: "Settings", url: "/settings", icon: Settings2 }],
+    items: [{ title: "Profile", url: "/profile", icon: Settings2 }],
   },
 ];
 

@@ -11,16 +11,35 @@ export const auth = betterAuth({
   trustedOrigins: [process.env.FRONTEND_ORIGIN as string],
   emailAndPassword: {
     enabled: true,
-    sendResetPassword: async (data, request) => {
-      // In a real application, you would use an email service like Resend or Nodemailer
-      console.log();
-      console.log("==========================================");
-      console.log(`🔐 PASSWORD RESET REQUEST`);
-      console.log(`To: ${data.user.email}`);
-      console.log(`Click this link to reset your password:`);
-      console.log(`🔗 ${data.url}`);
-      console.log("==========================================");
-      console.log();
+    sendResetPassword: async (data) => {
+      const nodemailer = await import("nodemailer");
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_SECURE === "true",
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Zentask" <${process.env.SMTP_USER}>`,
+        to: data.user.email,
+        subject: "Reset your Zentask password",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:auto">
+            <h2 style="color:#1a1a1a">Reset your password</h2>
+            <p>Hi ${data.user.name ?? "there"},</p>
+            <p>We received a request to reset your password. Click the button below to choose a new one.</p>
+            <a href="${data.url}" style="display:inline-block;padding:12px 24px;background:#6366f1;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:16px 0">
+              Reset Password
+            </a>
+            <p style="color:#666;font-size:13px">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
+          </div>
+        `,
+      });
     },
   },
   socialProviders: {
