@@ -1,0 +1,11 @@
+-- CreateEnum
+CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'SUSPENDED');
+
+-- AlterTable
+ALTER TABLE "project" ADD COLUMN     "deliveryValue" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "startDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "user" ADD COLUMN     "department" TEXT,
+ADD COLUMN     "isVerified" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE';

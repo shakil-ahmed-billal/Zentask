@@ -1,0 +1,33 @@
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Host localhost:8000 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0   0     0   0     0     0     0  --:--:-- --:--:-- --:--:--     0*   Trying [::1]:8000...
+* Established connection to localhost (::1 port 8000) from ::1 port 53539 
+* using HTTP/1.x
+> POST /api/v1/auth/sign-in/email HTTP/1.1
+> Host: localhost:8000
+> User-Agent: curl/8.17.0
+> Accept: */*
+> Content-Type: application/json
+> Content-Length: 57
+> 
+} [57 bytes data]
+* upload completely sent off: 57 bytes
+< HTTP/1.1 404 Not Found
+< X-Powered-By: Express
+< Access-Control-Allow-Origin: http://localhost:3000
+< Vary: Origin
+< Access-Control-Allow-Credentials: true
+< Content-Type: application/json; charset=utf-8
+< Content-Length: 121
+< ETag: W/"79-h3VlVi0Ey5sitB42zc6XEjKESj8"
+< Date: Wed, 25 Feb 2026 22:04:46 GMT
+< Connection: keep-alive
+< Keep-Alive: timeout=5
+< 
+{ [121 bytes data]
+100   178 100   121 100    57 60409 28457  --:--:-- --:--:-- --:--:-- 178000{"success":false,"message":"Not Found","errorMessages":[{"path":"/api/v1/auth/sign-in/email","message":"API Not Found"}]}
+* Connection #0 to host localhost:8000 left intact

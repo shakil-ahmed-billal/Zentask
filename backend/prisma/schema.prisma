@@ -1,0 +1,180 @@
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+enum UserRole {
+  LEADER
+  MEMBER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum ProjectStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          UserRole  @default(MEMBER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  // WorkSphere specific
+  department    String?
+  status        UserStatus @default(ACTIVE)
+  isVerified    Boolean    @default(false)
+  leaderId      String?
+  leader        User?     @relation("LeaderMembers", fields: [leaderId], references: [id])
+  members       User[]    @relation("LeaderMembers")
+  projects      MemberProject[]
+  tasks         Task[]
+  ledProjects   Project[] @relation("LeaderProjects")
+  activityLogs  ActivityLog[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Project {
+  id           String          @id @default(uuid())
+  title        String
+  description  String?
+  budget       Float           @default(0)
+  amount       Float           @default(0)
+  deliveryValue Float          @default(0)
+  progress     Float           @default(0)
+  startDate    DateTime        @default(now())
+  deadline     DateTime
+  status       ProjectStatus   @default(PENDING)
+  leaderId     String
+  leader       User            @relation("LeaderProjects", fields: [leaderId], references: [id])
+  memberId     String?
+  telegramURL  String?
+  sheetURL     String?
+  projectPhotoURL String?
+  websiteURL   String?
+  members      MemberProject[]
+  tasks        Task[]
+  activityLogs ActivityLog[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@map("project")
+}
+
+model MemberProject {
+  userId    String
+  projectId String
+  user      User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@id([userId, projectId])
+  @@map("member_project")
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  priority    Priority   @default(MEDIUM)
+  status      TaskStatus @default(PENDING)
+  deadline    DateTime
+  projectId   String
+  project     Project    @relation(fields: [projectId], references: [id])
+  memberId    String
+  member      User       @relation(fields: [memberId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("task")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  message   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("activity_log")
+}
