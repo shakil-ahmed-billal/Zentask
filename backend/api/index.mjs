@@ -95,7 +95,7 @@ var auth = betterAuth({
   },
   advanced: {
     cookiePrefix: "better-auth",
-    useSecureCookies: process.env.NODE_ENV === "production",
+    useSecureCookies: true,
     crossSubDomainCookies: {
       enabled: false
     },
@@ -1322,7 +1322,7 @@ var routes_default = router5;
 // src/app.ts
 dotenv2.config();
 var app = express6();
-app.set("trust proxy", true);
+app.set("trust proxy", 1);
 var allowedOrigins = [
   process.env.APP_URL || "http://localhost:3000",
   process.env.PROD_APP_URL

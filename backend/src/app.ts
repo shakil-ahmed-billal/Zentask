@@ -10,7 +10,7 @@ import router from "./app/routes";
 dotenv.config();
 
 const app: Application = express();
-app.set("trust proxy", true);
+app.set("trust proxy", 1);
 
 // Configure CORS to allow both production and Vercel preview deployments
 const allowedOrigins = [
@@ -50,6 +50,7 @@ app.use(morgan("dev"));
 
 // Better Auth - must be mounted before other middleware and at app level
 // so it receives the full URL path (not Express-stripped path)
+// Better Auth - mounted at /api/auth
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.all("/api/v1/auth/*splat", toNodeHandler(auth));
 
