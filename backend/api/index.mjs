@@ -1322,6 +1322,7 @@ var routes_default = router5;
 // src/app.ts
 dotenv2.config();
 var app = express6();
+app.set("trust proxy", true);
 var allowedOrigins = [
   process.env.APP_URL || "http://localhost:3000",
   process.env.PROD_APP_URL

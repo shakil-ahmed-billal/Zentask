@@ -10,6 +10,7 @@ import router from "./app/routes";
 dotenv.config();
 
 const app: Application = express();
+app.set("trust proxy", true);
 
 // Configure CORS to allow both production and Vercel preview deployments
 const allowedOrigins = [
