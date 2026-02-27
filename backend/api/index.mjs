@@ -31,7 +31,10 @@ var auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql"
   }),
-  trustedOrigins: [process.env.FRONTEND_ORIGIN],
+  trustedOrigins: [
+    process.env.FRONTEND_ORIGIN,
+    process.env.PROD_APP_URL
+  ],
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async (data) => {
