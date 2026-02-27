@@ -66,12 +66,6 @@ var auth = betterAuth({
       });
     }
   },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET
-    }
-  },
   user: {
     additionalFields: {
       role: {
@@ -89,7 +83,14 @@ var auth = betterAuth({
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60
-      // 5 minutes
+    }
+  },
+  socialProviders: {
+    google: {
+      prompt: "select_account consent",
+      accessType: "offline",
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET
     }
   },
   advanced: {
@@ -99,7 +100,6 @@ var auth = betterAuth({
       enabled: false
     },
     disableCSRFCheck: true
-    // Allow requests without Origin header (Postman, mobile apps, etc.)
   }
 });
 
