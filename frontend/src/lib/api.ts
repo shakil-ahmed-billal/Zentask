@@ -12,7 +12,10 @@ export const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Prevent redirect loop if the error is from an auth endpoint
+    const isAuthRequest = error.config?.url?.includes("/auth/");
+
+    if (error.response?.status === 401 && !isAuthRequest) {
       if (typeof window !== "undefined") {
         window.location.href = "/auth/login";
       }

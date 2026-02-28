@@ -88,23 +88,31 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      // better-auth default sign-up endpoint
-      await api.post("/auth/sign-up/email", {
-        name: values.name,
-        email: values.email,
-        password: values.password,
-        role: values.role,
-        isVerified: false,
-        leaderId: values.role === "MEMBER" ? values.leaderId : undefined,
-      });
-      toast.success("Account created. You can now sign in.");
+
+      const { error } = await authClient.signUp.email(
+        {
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          callbackURL: "/auth/login", // Redirect to login after successful signup
+        },
+        {
+          // Additional user fields defined in the schema
+          //@ts-ignore
+          role: values.role,
+          leaderId: values.role === "MEMBER" ? values.leaderId : undefined,
+        },
+      );
+
+      if (error) {
+        setError(error.message || "Failed to register");
+        return;
+      }
+
+      toast.success("Account created! Please sign in.");
       router.push("/auth/login");
     } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        "Failed to register";
-      setError(message);
+      setError("An unexpected error occurred during registration");
     } finally {
       setLoading(false);
     }

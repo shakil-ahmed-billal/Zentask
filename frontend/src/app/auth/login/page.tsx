@@ -1,6 +1,5 @@
 "use client";
 
-import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -55,19 +54,20 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      // better-auth default sign-in endpoint
-      await api.post("/auth/sign-in/email", {
+      const { error } = await authClient.signIn.email({
         email: values.email,
         password: values.password,
       });
+
+      if (error) {
+        setError(error.message || "Failed to login");
+        return;
+      }
+
       toast.success("Welcome back!");
       router.push("/dashboard");
     } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        "Failed to login";
-      setError(message);
+      setError("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
