@@ -11,6 +11,8 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.FRONTEND_ORIGIN as string,
     process.env.PROD_APP_URL as string,
+    process.env.APP_URL as string,
+    "http://localhost:3000",
   ],
   emailAndPassword: {
     enabled: true,
@@ -74,10 +76,9 @@ export const auth = betterAuth({
   },
 
   advanced: {
-    cookiePrefix: "better-auth",
-    useSecureCookies: true,
+    useSecureCookies: process.env.NODE_ENV === "production",
     crossSubDomainCookies: {
-      enabled: false,
+      enabled: true,
     },
     disableCSRFCheck: true,
   },

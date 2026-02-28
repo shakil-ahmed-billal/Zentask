@@ -69,7 +69,6 @@ const suspendUser = catchAsync(async (req: Request, res: Response) => {
 const getAllLeaders = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.getAllUsersFromDB({
     role: "LEADER",
-    isVerified: true,
     status: "ACTIVE",
   });
   sendResponse(res, {

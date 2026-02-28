@@ -33,7 +33,9 @@ var auth = betterAuth({
   }),
   trustedOrigins: [
     process.env.FRONTEND_ORIGIN,
-    process.env.PROD_APP_URL
+    process.env.PROD_APP_URL,
+    process.env.APP_URL,
+    "http://localhost:3000"
   ],
   emailAndPassword: {
     enabled: true,
@@ -94,10 +96,9 @@ var auth = betterAuth({
     }
   },
   advanced: {
-    cookiePrefix: "better-auth",
-    useSecureCookies: true,
+    useSecureCookies: process.env.NODE_ENV === "production",
     crossSubDomainCookies: {
-      enabled: false
+      enabled: true
     },
     disableCSRFCheck: true
   }
@@ -1259,7 +1260,6 @@ var suspendUser = catchAsync_default(async (req, res) => {
 var getAllLeaders = catchAsync_default(async (req, res) => {
   const result = await UserService.getAllUsersFromDB({
     role: "LEADER",
-    isVerified: true,
     status: "ACTIVE"
   });
   sendResponse_default(res, {

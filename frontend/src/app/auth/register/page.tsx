@@ -8,6 +8,15 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
 
+type ExtendedSignUpData = {
+  name: string;
+  email: string;
+  password: string;
+  role: string; // Assuming role is necessary for your logic
+  leaderId?: string;
+  callbackURL?: string;
+};
+
 const schema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -89,20 +98,14 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      const { error } = await authClient.signUp.email(
-        {
-          name: values.name,
-          email: values.email,
-          password: values.password,
-          callbackURL: "/auth/login", // Redirect to login after successful signup
-        },
-        {
-          // Additional user fields defined in the schema
-          //@ts-ignore
-          role: values.role,
-          leaderId: values.role === "MEMBER" ? values.leaderId : undefined,
-        },
-      );
+      const { error } = await authClient.signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        role: values.role,
+        leaderId: values.role === "MEMBER" ? values.leaderId : undefined,
+        callbackURL: "/auth/login",
+      } as ExtendedSignUpData);
 
       if (error) {
         setError(error.message || "Failed to register");
