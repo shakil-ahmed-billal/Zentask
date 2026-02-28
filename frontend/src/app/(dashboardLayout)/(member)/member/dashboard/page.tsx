@@ -1,5 +1,6 @@
 "use client";
 
+import { CountdownTimer } from "@/components/CountdownTimer";
 import { api } from "@/lib/api";
 import { useCallback, useEffect, useState } from "react";
 
@@ -325,14 +326,29 @@ export default function MemberDashboardPage() {
                     <div>
                       <p className="font-medium text-sm">{p.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(p.deadline).toLocaleDateString()}
+                        {new Date(p.deadline).toLocaleString([], {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
                       </p>
                     </div>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${days <= 1 ? "bg-red-100 text-red-700" : days <= 3 ? "bg-orange-100 text-orange-700" : "bg-yellow-100 text-yellow-700"}`}
-                    >
-                      {days === 0 ? "Due Today!" : `${days}d left`}
-                    </span>
+                    {p.deadline &&
+                    (p as any).status !== "DELIVERED" &&
+                    (p as any).status !== "CANCELLED" ? (
+                      <CountdownTimer deadline={p.deadline} />
+                    ) : (p as any).status === "DELIVERED" ? (
+                      <span className="text-emerald-500 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit">
+                        Completed
+                      </span>
+                    ) : (p as any).status === "CANCELLED" ? (
+                      <span className="text-red-500 text-[10px] font-bold uppercase tracking-wider bg-red-500/10 px-2 py-0.5 rounded-full w-fit">
+                        Cancelled
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-[10px]">
+                        —
+                      </span>
+                    )}
                   </div>
                 );
               })

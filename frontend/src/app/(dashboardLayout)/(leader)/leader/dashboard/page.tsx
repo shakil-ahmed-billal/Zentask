@@ -1,6 +1,17 @@
 "use client";
 
+import { CountdownTimer } from "@/components/CountdownTimer";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { api } from "@/lib/api";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 type Summary = {
@@ -234,144 +245,188 @@ export default function LeaderDashboardPage() {
 
       {/* Projects Table */}
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-        <div className="p-4 border-b flex items-center justify-between">
+        <div className="p-4 border-b flex items-center justify-between bg-muted/30">
           <h2 className="font-semibold">All Projects</h2>
-          <span className="text-sm text-muted-foreground">
+          <Badge variant="secondary" className="font-medium">
             {loading ? "Loading..." : `${projects.length} projects`}
-          </span>
+          </Badge>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 border-b text-xs">
-              <tr>
-                <th className="px-4 py-3 text-left">Project Name</th>
-                <th className="px-4 py-3 text-left">Members</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-center">Progress</th>
-                <th className="px-4 py-3 text-left">Deadline</th>
-                <th className="px-4 py-3 text-right">Delivery Value</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    Loading projects...
-                  </td>
-                </tr>
-              ) : projects.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No projects found.
-                  </td>
-                </tr>
-              ) : (
-                projects.map((p) => {
-                  const total = p.tasks?.length || 0;
-                  const done =
-                    p.tasks?.filter((t) => t.status === "COMPLETED").length ||
-                    0;
-                  const progress =
-                    total > 0 ? Math.round((done / total) * 100) : 0;
-                  const days = p.deadline
-                    ? Math.ceil(
-                        (new Date(p.deadline).getTime() -
-                          new Date().getTime()) /
-                          86400000,
-                      )
-                    : null;
-                  const isOverdue = days !== null && days < 0;
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[300px]">Project Info</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Progress</TableHead>
+              <TableHead>Delivery Value</TableHead>
+              <TableHead>Deadline / Countdown</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="h-32 text-center text-muted-foreground font-medium"
+                >
+                  Loading projects...
+                </TableCell>
+              </TableRow>
+            ) : projects.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="h-32 text-center text-muted-foreground font-medium"
+                >
+                  No projects found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              projects.map((p) => {
+                const total = p.tasks?.length || 0;
+                const done =
+                  p.tasks?.filter((t) => t.status === "COMPLETED").length || 0;
+                const progress =
+                  total > 0 ? Math.round((done / total) * 100) : 0;
 
-                  return (
-                    <tr
-                      key={p.id}
-                      className={`hover:bg-muted/30 transition-colors ${isOverdue ? "bg-red-50/50" : ""}`}
-                    >
-                      <td className="px-4 py-3 font-medium">
-                        {p.title}
-                        {isOverdue && (
-                          <span className="ml-2 text-[10px] bg-red-100 text-red-700 rounded-full px-2 py-0.5">
-                            Overdue
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex -space-x-1">
-                          {p.members?.slice(0, 3).map((m) => (
-                            <div
-                              key={m.user.id}
-                              title={m.user.name}
-                              className="w-6 h-6 rounded-full bg-primary/20 text-primary text-[9px] flex items-center justify-center border border-background font-medium"
-                            >
-                              {m.user.name[0]}
-                            </div>
-                          ))}
-                          {(p.members?.length || 0) > 3 && (
-                            <div className="w-6 h-6 rounded-full bg-muted text-[9px] flex items-center justify-center border border-background">
-                              +{p.members.length - 3}
-                            </div>
-                          )}
+                return (
+                  <TableRow
+                    key={p.id}
+                    className="group hover:bg-muted/30 transition-colors"
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 shrink-0 overflow-hidden rounded-lg border bg-muted flex items-center justify-center text-muted-foreground font-bold">
+                          {p.title.charAt(0)}
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={p.status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1.5 rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-primary"
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
-                          <span className="text-xs w-8 text-right">
-                            {progress}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-xs">
-                        {p.deadline
-                          ? new Date(p.deadline).toLocaleDateString()
-                          : "—"}
-                        {days !== null && !isOverdue && (
-                          <div className="text-[10px] text-muted-foreground">
-                            {days}d left
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right font-medium">
-                        ${p.deliveryValue?.toLocaleString() ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <a
+                        <div className="flex flex-col min-w-0">
+                          <Link
                             href={`/leader/projects/${p.id}`}
-                            className="text-xs text-primary hover:underline"
+                            className="font-semibold text-sm truncate hover:text-primary transition-colors"
                           >
-                            View
-                          </a>
-                          <button
-                            onClick={() => handleDelete(p.id)}
-                            className="text-xs text-red-500 hover:underline"
-                          >
-                            Delete
-                          </button>
+                            {p.title}
+                          </Link>
+                          <div className="flex -space-x-1 mt-1">
+                            {p.members?.slice(0, 3).map((m) => (
+                              <div
+                                key={m.user.id}
+                                title={m.user.name}
+                                className="w-5 h-5 rounded-full bg-primary/10 text-[8px] flex items-center justify-center border border-background font-bold text-primary"
+                              >
+                                {m.user.name[0]}
+                              </div>
+                            ))}
+                            {p.members?.length > 3 && (
+                              <div className="w-5 h-5 rounded-full bg-muted text-[8px] flex items-center justify-center border border-background font-medium">
+                                +{p.members.length - 3}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={p.status} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1.5 w-24">
+                        <div className="flex justify-between text-[10px]">
+                          <span className="font-medium">{progress}%</span>
+                        </div>
+                        <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all duration-500"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium text-sm">
+                      ${p.deliveryValue?.toLocaleString() ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1 min-w-[120px]">
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
+                          {p.deadline
+                            ? new Date(p.deadline).toLocaleString([], {
+                                dateStyle: "short",
+                                timeStyle: "short",
+                              })
+                            : "—"}
+                        </span>
+                        {p.deadline &&
+                        p.status !== "DELIVERED" &&
+                        p.status !== "CANCELLED" ? (
+                          <CountdownTimer deadline={p.deadline} />
+                        ) : p.status === "DELIVERED" ? (
+                          <span className="text-emerald-500 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit">
+                            Completed
+                          </span>
+                        ) : p.status === "CANCELLED" ? (
+                          <span className="text-red-500 text-[10px] font-bold uppercase tracking-wider bg-red-500/10 px-2 py-0.5 rounded-full w-fit">
+                            Cancelled
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-[10px]">
+                            —
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link
+                          href={`/leader/projects/${p.id}`}
+                          className="p-1.5 rounded-md hover:bg-muted text-primary transition-colors"
+                          title="View"
+                        >
+                          <svg
+                            className="size-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(p.id)}
+                          className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors"
+                          title="Delete"
+                        >
+                          <svg
+                            className="size-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
